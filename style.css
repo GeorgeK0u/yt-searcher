@@ -40,3 +40,29 @@ button:hover
 {
 	cursor: pointer;
 }
+
+#videos-wrapper
+{
+	padding-top: 1rem;
+	display: flex;
+	flex-direction: column;
+}
+
+.video-wrapper
+{
+	margin-top: 2rem;
+	padding: .5rem;
+	width: fit-content;
+	display: flex;
+	flex-direction: column;
+}
+.video-wrapper:hover
+{
+	cursor: pointer;
+	border: 1px solid black;
+}
+.video-thumbnail
+{
+	width: 15vw;
+	height: 150px;
+}
