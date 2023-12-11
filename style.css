@@ -15,6 +15,8 @@ body
 #search-form-section
 {
 	padding-top: 2rem;
+	width: fit-content;
+	height: fit-content;
 }
 
 #search-form-wrapper
@@ -43,26 +45,69 @@ button:hover
 
 #videos-wrapper
 {
-	padding-top: 1rem;
+	padding: 1rem 0;
 	display: flex;
-	flex-direction: column;
+	flex-wrap: wrap;
 }
 
 .video-wrapper
 {
 	margin-top: 2rem;
 	padding: .5rem;
-	width: fit-content;
+	width: 20vw;
 	display: flex;
 	flex-direction: column;
 }
+
 .video-wrapper:hover
 {
 	cursor: pointer;
 	border: 1px solid black;
 }
+
+.video-title
+{
+	overflow-x: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap; /* Prevents text from wrapping */
+}
+
 .video-thumbnail
 {
-	width: 15vw;
-	height: 150px;
+	width: 20vw;
+	aspect-ratio: 16 / 9;
+}
+
+#video-display-wrapper
+{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 60vw;
+	height: fit-content;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	margin-top: auto;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: auto;
+	z-index: 1;
+	background-color: white;
+}
+
+#video-display-title
+{
+	padding-top: 1rem;
+	font-size: 1.25rem;
+	font-family: Arial, sans-serif;
+}
+
+#video-display-thumbnail
+{
+	margin: .5rem 0;
+	width: 80%;
+	aspect-ratio: 16 / 9;
 }

@@ -10,6 +10,38 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 const searchInput = document.querySelector('#search-input');
 const searchBtn = document.querySelector('#search-btn');
 const videosWrapper = document.querySelector('#videos-wrapper');
+function decodeEscaped(text) {
+    try {
+        const parser = new DOMParser().parseFromString(text, 'text/html');
+        const decodedText = parser.documentElement.textContent;
+        return decodedText;
+    }
+    catch (err) {
+        console.log('Failed to decode html-escaped title');
+        return text;
+    }
+}
+function removeVideoDisplay() {
+    const videoDisplay = document.querySelector('#video-display-wrapper');
+    if (videoDisplay) {
+        videoDisplay.remove();
+    }
+}
+function displayVideo(videoWrapper) {
+    const videoDisplayWrapper = document.createElement('div');
+    videoDisplayWrapper.id = 'video-display-wrapper';
+    const videoTitle = videoWrapper.querySelector('.video-title').textContent;
+    const videoDisplayTitleEl = document.createElement('div');
+    videoDisplayTitleEl.id = 'video-display-title';
+    videoDisplayTitleEl.textContent = videoTitle;
+    const videoThumbnailSrc = videoWrapper.querySelector('.video-thumbnail').src;
+    const videoThumbnailEl = document.createElement('img');
+    videoThumbnailEl.id = 'video-display-thumbnail';
+    videoThumbnailEl.src = videoThumbnailSrc;
+    videoDisplayWrapper.appendChild(videoDisplayTitleEl);
+    videoDisplayWrapper.appendChild(videoThumbnailEl);
+    document.body.appendChild(videoDisplayWrapper);
+}
 searchBtn.onclick = (e) => __awaiter(this, void 0, void 0, function* () {
     e.preventDefault();
     const query = searchInput.value;
@@ -21,8 +53,9 @@ searchBtn.onclick = (e) => __awaiter(this, void 0, void 0, function* () {
         // Update search results
         try {
             const maxResults = 10;
+            const searchType = 'video';
             const apiKey = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w';
-            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${maxResults}&q=${query}&key=${apiKey}`);
+            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${maxResults}&q=${query}&type=${searchType}&key=${apiKey}`);
             const jsonResp = yield resp.json();
             console.log('Updating search results');
             console.log(jsonResp);
@@ -34,10 +67,10 @@ searchBtn.onclick = (e) => __awaiter(this, void 0, void 0, function* () {
                 videoWrapper.className = 'video-wrapper';
                 const videoTitle = document.createElement('div');
                 videoTitle.className = 'video-title';
-                videoTitle.textContent = videoData.title;
+                videoTitle.textContent = decodeEscaped(videoData.title);
                 const videoThumbnail = document.createElement('img');
                 videoThumbnail.className = 'video-thumbnail';
-                videoThumbnail.src = videoData.thumbnails.default.url;
+                videoThumbnail.src = videoData.thumbnails.high.url;
                 videoWrapper.appendChild(videoTitle);
                 videoWrapper.appendChild(videoThumbnail);
                 videosWrapper.appendChild(videoWrapper);
@@ -49,3 +82,12 @@ searchBtn.onclick = (e) => __awaiter(this, void 0, void 0, function* () {
     }
     return;
 });
+document.body.onclick = (e) => {
+    removeVideoDisplay();
+    const elClicked = e.target;
+    const elClickedClass = elClicked.className;
+    if (elClickedClass.includes('video')) {
+        const videoWrapper = (elClickedClass.includes('wrapper')) ? elClicked : elClicked.parentElement;
+        displayVideo(videoWrapper);
+    }
+};
