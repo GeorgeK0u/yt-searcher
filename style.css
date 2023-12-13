@@ -78,13 +78,20 @@ button:hover
 	aspect-ratio: 16 / 9;
 }
 
+.video-channel-name
+{
+	color: #888;
+}
+
 #video-display-wrapper
 {
 	display: flex;
 	flex-direction: column;
-	align-items: center;
+	padding: 1rem;
 	width: 60vw;
 	height: fit-content;
+	max-height: 90vh;
+	overflow-y: auto;
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -96,18 +103,49 @@ button:hover
 	margin-bottom: auto;
 	z-index: 1;
 	background-color: white;
+	border: 1.5px solid grey;
 }
 
 #video-display-title
 {
-	padding-top: 1rem;
+	align-self: center;
 	font-size: 1.25rem;
 	font-family: Arial, sans-serif;
 }
 
 #video-display-thumbnail
 {
+	align-self: center;
 	margin: .5rem 0;
-	width: 80%;
+	width: 75%;
 	aspect-ratio: 16 / 9;
+}
+
+#video-display-channel-name
+{
+	margin: 1rem 0;
+	border: 1px solid grey;
+	width: fit-content;
+	padding: 5px;
+	border-radius: 10px;
+	background-color: #F88;
+}
+
+#video-display-description
+{
+	display: inline;
+	font-size: .85rem;
+	white-space: pre-wrap;
+}
+#video-display-description::before
+{
+	content: 'Description\A';
+	font-size: .95rem;
+	font-weight: bold;
+	color: #666;
+}
+#video-display-desc-read-more-btn
+{
+	margin-left: 10px;
+	padding: 2px;
 }
