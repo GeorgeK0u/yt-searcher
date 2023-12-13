@@ -6,13 +6,30 @@
 	</head>
 
 	<body>
-		<section id='search-form-section'>
-			<form id='search-form-wrapper'>
-				<input id='search-input' type='text' placeholder='Enter your search'/>
-				<button id='search-btn' type='submit'>Search</button>
-			</form>
-			<div id='videos-wrapper'></div>
-		</section>
+		<form id='search-form-section'>
+			<input id='search-input' type='text' placeholder='Enter your search'/>
+			<button id='search-btn' type='submit'>Search</button>
+		</form>
+		<div id='options-wrapper'>
+			<div id='results-per-page-dropdown-wrapper'>
+				<label id='results-per-page-label'>Results Per Page:</label>
+				<select id='results-per-page-dropdown'>
+					<option>10</option>
+					<option>25</option>
+					<option>50</option>
+				</select>
+			</div>
+			<div id='search-type-dropdown-wrapper'>
+				<label id='search-type-label'>Search Type:</label>
+				<select id='search-type-dropdown'>
+					<option value=''>All</option>
+					<option value='video'>Video</option>
+					<option value='playlist'>Playlist</option>
+					<option value='channel'>Channel</option>
+				</select>
+			</div>
+		</div>
+		<div id='videos-wrapper'></div>
 		<script src='./script.js'></script>
 	</body>
 </html>

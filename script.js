@@ -9,8 +9,116 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 const searchInput = document.querySelector('#search-input');
 const searchBtn = document.querySelector('#search-btn');
+const resultsPerPageDropdown = document.querySelector('#results-per-page-dropdown');
+const searchTypeDropdown = document.querySelector('#search-type-dropdown');
 const videosWrapper = document.querySelector('#videos-wrapper');
 const apiKey = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w';
+// Backup key
+// const apiKey: string = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk';
+let searchQuery, jsonResp, nextPageToken;
+let resultsPerPage = 10, searchType = 'video';
+function showResults() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerPage}&pageToken=${nextPageToken}&q=${searchQuery}&type=${searchType}&key=${apiKey}`);
+            jsonResp = yield resp.json();
+            const searchResults = jsonResp.items;
+            for (let i = 0; i < searchResults.length; i++) {
+                const videoItem = searchResults[i];
+                const videoData = videoItem.snippet;
+                const videoWrapper = document.createElement('div');
+                videoWrapper.className = 'video-wrapper';
+                // title
+                const videoTitle = document.createElement('div');
+                videoTitle.className = 'video-title';
+                videoTitle.textContent = decodeEscaped(videoData.title);
+                // channel
+                const videoChannelName = document.createElement('div');
+                videoChannelName.className = 'video-channel-name';
+                videoChannelName.textContent = videoData.channelTitle;
+                // thumbnail
+                const videoThumbnail = document.createElement('img');
+                videoThumbnail.className = 'video-thumbnail';
+                videoThumbnail.src = videoData.thumbnails.high.url;
+                // metadata
+                videoWrapper.setAttribute('metadata', JSON.stringify({
+                    videoId: videoItem.id.videoId,
+                    title: videoTitle.textContent,
+                    channelName: videoChannelName.textContent,
+                    thumbnailSrc: videoThumbnail.src
+                }));
+                // render
+                videoWrapper.appendChild(videoTitle);
+                videoWrapper.appendChild(videoChannelName);
+                videoWrapper.appendChild(videoThumbnail);
+                videosWrapper.appendChild(videoWrapper);
+            }
+            let loadMoreBtn = document.querySelector('#load-next-page-results-btn');
+            if (jsonResp.hasOwnProperty('nextPageToken')) {
+                if (!loadMoreBtn) {
+                    loadMoreBtn = document.createElement('button');
+                    loadMoreBtn.id = 'load-next-page-results-btn';
+                    loadMoreBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
+                        // update next page token
+                        nextPageToken = jsonResp.nextPageToken;
+                        showResults();
+                        return;
+                    });
+                    loadMoreBtn.textContent = 'Load more';
+                    document.body.appendChild(loadMoreBtn);
+                }
+            }
+            else {
+                if (loadMoreBtn) {
+                    loadMoreBtn.remove();
+                }
+            }
+        }
+        catch (err) {
+            console.log('Exception occured: ', err);
+        }
+    });
+}
+searchBtn.onclick = (e) => __awaiter(this, void 0, void 0, function* () {
+    e.preventDefault();
+    searchQuery = searchInput.value;
+    if (searchQuery == '') {
+        return;
+    }
+    // clear results
+    for (let i = videosWrapper.childElementCount - 1; i >= 0; i--) {
+        videosWrapper.children[i].remove();
+    }
+    // remove load more btn
+    const loadMoreBtn = document.querySelector('#load-next-page-results-btn');
+    if (loadMoreBtn) {
+        loadMoreBtn.remove();
+    }
+    // reset next page token
+    nextPageToken = '';
+    showResults();
+});
+resultsPerPageDropdown.onchange = () => {
+    resultsPerPage = parseInt(resultsPerPageDropdown.value);
+};
+searchTypeDropdown.onchange = () => {
+    searchType = searchTypeDropdown.value;
+};
+document.body.onclick = (e) => {
+    const elClicked = e.target;
+    const elClickedClass = elClicked.className;
+    const elClickedId = elClicked.id;
+    // prevent the display from being removed
+    if (elClickedClass.includes('video-display') || elClickedId.includes('video-display')) {
+        return;
+    }
+    removeVideoDisplay();
+    if (elClickedClass.includes('video')) {
+        const videoWrapper = (elClickedClass.includes('wrapper')) ? elClicked : elClicked.parentElement;
+        window.scrollTo({ top: 0, left: 0 });
+        displayVideo(videoWrapper);
+    }
+};
 function decodeEscaped(text) {
     try {
         const parser = new DOMParser().parseFromString(text, 'text/html');
@@ -20,12 +128,6 @@ function decodeEscaped(text) {
     catch (err) {
         console.log('Failed to decode html-escaped title');
         return text;
-    }
-}
-function removeVideoDisplay() {
-    const videoDisplay = document.querySelector('#video-display-wrapper');
-    if (videoDisplay) {
-        videoDisplay.remove();
     }
 }
 function getShortDescVersion(fullDesc) {
@@ -97,71 +199,9 @@ function displayVideo(videoWrapper) {
     videoDisplayWrapper.appendChild(videoDescriptionWrapper);
     document.body.appendChild(videoDisplayWrapper);
 }
-searchBtn.onclick = (e) => __awaiter(this, void 0, void 0, function* () {
-    e.preventDefault();
-    const query = searchInput.value;
-    if (query != '') {
-        // remove previous search results
-        for (let i = videosWrapper.childElementCount - 1; i >= 0; i--) {
-            videosWrapper.children[i].remove();
-        }
-        // Update search results
-        try {
-            const maxResults = 10;
-            const searchType = 'video';
-            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${maxResults}&q=${query}&type=${searchType}&key=${apiKey}`);
-            const jsonResp = yield resp.json();
-            console.log('Updating search results');
-            // Show search results
-            const searchResults = jsonResp.items;
-            for (let i = 0; i < searchResults.length; i++) {
-                const videoItem = searchResults[i];
-                const videoData = videoItem.snippet;
-                const videoWrapper = document.createElement('div');
-                videoWrapper.className = 'video-wrapper';
-                // title
-                const videoTitle = document.createElement('div');
-                videoTitle.className = 'video-title';
-                videoTitle.textContent = decodeEscaped(videoData.title);
-                // channel
-                const videoChannelName = document.createElement('div');
-                videoChannelName.className = 'video-channel-name';
-                videoChannelName.textContent = videoData.channelTitle;
-                // thumbnail
-                const videoThumbnail = document.createElement('img');
-                videoThumbnail.className = 'video-thumbnail';
-                videoThumbnail.src = videoData.thumbnails.high.url;
-                // metadata
-                videoWrapper.setAttribute('metadata', JSON.stringify({
-                    videoId: videoItem.id.videoId,
-                    title: videoTitle.textContent,
-                    channelName: videoChannelName.textContent,
-                    thumbnailSrc: videoThumbnail.src
-                }));
-                // render
-                videoWrapper.appendChild(videoTitle);
-                videoWrapper.appendChild(videoChannelName);
-                videoWrapper.appendChild(videoThumbnail);
-                videosWrapper.appendChild(videoWrapper);
-            }
-        }
-        catch (err) {
-            console.log('Exception occured: ', err);
-        }
+function removeVideoDisplay() {
+    const videoDisplay = document.querySelector('#video-display-wrapper');
+    if (videoDisplay) {
+        videoDisplay.remove();
     }
-    return;
-});
-document.body.onclick = (e) => {
-    const elClicked = e.target;
-    const elClickedClass = elClicked.className;
-    const elClickedId = elClicked.id;
-    // prevent the display from being removed
-    if (elClickedClass.includes('video-display') || elClickedId.includes('video-display')) {
-        return;
-    }
-    removeVideoDisplay();
-    if (elClickedClass.includes('video')) {
-        const videoWrapper = (elClickedClass.includes('wrapper')) ? elClicked : elClicked.parentElement;
-        displayVideo(videoWrapper);
-    }
-};
+}
