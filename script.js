@@ -30,14 +30,18 @@ function removeVideoDisplay() {
 function displayVideo(videoWrapper) {
     const videoDisplayWrapper = document.createElement('div');
     videoDisplayWrapper.id = 'video-display-wrapper';
+    // title 
     const videoTitle = videoWrapper.querySelector('.video-title').textContent;
     const videoDisplayTitleEl = document.createElement('div');
     videoDisplayTitleEl.id = 'video-display-title';
     videoDisplayTitleEl.textContent = videoTitle;
+    // thumbnail
     const videoThumbnailSrc = videoWrapper.querySelector('.video-thumbnail').src;
     const videoThumbnailEl = document.createElement('img');
     videoThumbnailEl.id = 'video-display-thumbnail';
     videoThumbnailEl.src = videoThumbnailSrc;
+    // TODO
+    // channel
     videoDisplayWrapper.appendChild(videoDisplayTitleEl);
     videoDisplayWrapper.appendChild(videoThumbnailEl);
     document.body.appendChild(videoDisplayWrapper);
@@ -83,9 +87,13 @@ searchBtn.onclick = (e) => __awaiter(this, void 0, void 0, function* () {
     return;
 });
 document.body.onclick = (e) => {
-    removeVideoDisplay();
     const elClicked = e.target;
     const elClickedClass = elClicked.className;
+    const elClickedId = elClicked.id;
+    if (elClickedClass.includes('video-display') || elClickedId.includes('video-display')) {
+        return;
+    }
+    removeVideoDisplay();
     if (elClickedClass.includes('video')) {
         const videoWrapper = (elClickedClass.includes('wrapper')) ? elClicked : elClicked.parentElement;
         displayVideo(videoWrapper);
