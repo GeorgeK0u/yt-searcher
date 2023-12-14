@@ -142,6 +142,7 @@ function getShortDescVersion(fullDesc) {
 function displayVideo(videoWrapper) {
     // get search result video metadata
     const videoSearchResultMetadata = JSON.parse(videoWrapper.getAttribute('metadata'));
+    const videoId = videoSearchResultMetadata.videoId;
     // video display wrapper
     const videoDisplayWrapper = document.createElement('div');
     videoDisplayWrapper.id = 'video-display-wrapper';
@@ -149,10 +150,11 @@ function displayVideo(videoWrapper) {
     const videoDisplayTitleEl = document.createElement('div');
     videoDisplayTitleEl.id = 'video-display-title';
     videoDisplayTitleEl.textContent = videoSearchResultMetadata.title;
-    // thumbnail
-    const videoThumbnailEl = document.createElement('img');
-    videoThumbnailEl.id = 'video-display-thumbnail';
-    videoThumbnailEl.src = videoSearchResultMetadata.thumbnailSrc;
+    // video
+    const videoFrame = document.createElement('iframe');
+    videoFrame.id = 'video-display-frame';
+    videoFrame.src = `https://www.youtube.com/embed/${videoId}`;
+    videoFrame.allowFullscreen = true;
     // channel
     const videoChannelNameEl = document.createElement('div');
     videoChannelNameEl.id = 'video-display-channel-name';
@@ -165,7 +167,6 @@ function displayVideo(videoWrapper) {
     videoDescription.textContent = 'Loading...';
     videoDescriptionWrapper.appendChild(videoDescription);
     // fetch full description
-    const videoId = videoSearchResultMetadata.videoId;
     let fullDescription;
     fetch(`https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`)
         .then((data) => data.json()
@@ -194,7 +195,7 @@ function displayVideo(videoWrapper) {
         .catch((e) => { console.log('Exception occured: ', e); });
     // render
     videoDisplayWrapper.appendChild(videoDisplayTitleEl);
-    videoDisplayWrapper.appendChild(videoThumbnailEl);
+    videoDisplayWrapper.appendChild(videoFrame);
     videoDisplayWrapper.appendChild(videoChannelNameEl);
     videoDisplayWrapper.appendChild(videoDescriptionWrapper);
     document.body.appendChild(videoDisplayWrapper);
