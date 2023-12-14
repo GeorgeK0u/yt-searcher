@@ -6,10 +6,17 @@
 	</head>
 
 	<body>
-		<form id='search-form-section'>
-			<input id='search-input' type='text' placeholder='Enter your search'/>
-			<button id='search-btn' type='submit'>Search</button>
-		</form>
+		<header id='header-wrapper'>
+			<form id='search-form-section'>
+				<input id='search-input' type='text' placeholder='Enter your search'/>
+				<button id='search-btn' type='submit'>Search</button>
+			</form>
+			<div id='quotas-wrapper'>
+				<label id='quotas-cost-info-label' class='info-label'>?</label>
+				<label id='quotas-label'>Quotas:</label>
+				<div id='quotas-amount'></div>
+			</div>
+		</header>
 		<div id='options-wrapper'>
 			<div id='results-per-page-dropdown-wrapper'>
 				<label id='results-per-page-label'>Results Per Page:</label>
@@ -29,7 +36,7 @@
 				</select>
 			</div>
 		</div>
-		<div id='videos-wrapper'></div>
+		<div id='content-items-wrapper'></div>
 		<script src='./script.js'></script>
 	</body>
 </html>
