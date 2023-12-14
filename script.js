@@ -9,66 +9,97 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 let searchInput;
 let searchBtn;
+let quotasCostInfoLabel;
+let quotasAmtEl;
 let resultsPerPageDropdown;
 let searchTypeDropdown;
-let videosWrapper;
+let contentItemsWrapper;
 let apiKey;
 let searchQuery;
 let resultsPerPage, searchType;
 let jsonResp;
 let nextPageToken;
+let lastVisitDateKey;
+let quotasAmtKey;
+let quotasAmt;
+const QUOTAS_REFILL_AMT = 10000, QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_AMT = 1;
 (function init() {
     searchInput = document.querySelector('#search-input');
     searchBtn = document.querySelector('#search-btn');
+    quotasCostInfoLabel = document.querySelector('#quotas-cost-info-label');
+    quotasCostInfoLabel.title = `Search: -${QUOTAS_PER_CALL_AMT} Quotas\nLoad more: -${QUOTAS_PER_CALL_AMT} Quotas\nVideo description: -${QUOTAS_PER_VID_DESC_AMT} Quotas`;
+    quotasAmtEl = document.querySelector('#quotas-amount');
     resultsPerPageDropdown = document.querySelector('#results-per-page-dropdown');
     searchTypeDropdown = document.querySelector('#search-type-dropdown');
-    videosWrapper = document.querySelector('#videos-wrapper');
+    contentItemsWrapper = document.querySelector('#content-items-wrapper');
     apiKey = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w';
     // Backup key
     // apiKey = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk';
     resultsPerPage = parseInt(resultsPerPageDropdown.value);
     searchType = searchTypeDropdown.value;
+    // get/update quotas
+    const todayDate = new Date().getDate().toString();
+    lastVisitDateKey = 'lastVisitDate';
+    quotasAmtKey = 'quotasAmt';
+    let lastVisitDate = localStorage.getItem(lastVisitDateKey);
+    // reset
+    if (!lastVisitDate || lastVisitDate != todayDate) {
+        localStorage.setItem(lastVisitDateKey, todayDate);
+        lastVisitDate = todayDate;
+        localStorage.setItem(quotasAmtKey, QUOTAS_REFILL_AMT.toString());
+    }
+    quotasAmt = parseInt(localStorage.getItem(quotasAmtKey));
+    quotasAmtEl.textContent = quotasAmt.toString();
 })();
 function showResults() {
     return __awaiter(this, void 0, void 0, function* () {
+        if (quotasAmt < QUOTAS_PER_CALL_AMT) {
+            alert('Not enough quotas available. Come back tomorrow');
+            return;
+        }
         try {
             const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerPage}&pageToken=${nextPageToken}&q=${searchQuery}&type=${searchType}&key=${apiKey}`);
             jsonResp = yield resp.json();
+            console.log(jsonResp.items);
             const searchResults = jsonResp.items;
             for (let i = 0; i < searchResults.length; i++) {
-                const videoItem = searchResults[i];
-                const videoData = videoItem.snippet;
-                const videoWrapper = document.createElement('div');
-                videoWrapper.className = 'video-wrapper';
+                const contentItem = searchResults[i];
+                const contentItemData = contentItem.snippet;
+                const contentItemWrapper = document.createElement('div');
+                contentItemWrapper.className = 'content-item-wrapper';
                 // title
-                const videoTitle = document.createElement('div');
-                videoTitle.className = 'video-title';
-                videoTitle.textContent = decodeEscaped(videoData.title);
+                const contentItemTitle = document.createElement('div');
+                contentItemTitle.className = 'content-item-title';
+                contentItemTitle.textContent = decodeEscaped(contentItemData.title);
                 // channel
-                const videoChannelName = document.createElement('div');
-                videoChannelName.className = 'video-channel-name';
-                videoChannelName.textContent = videoData.channelTitle;
+                const contentItemChannelName = document.createElement('div');
+                contentItemChannelName.className = 'content-item-channel-name';
+                contentItemChannelName.textContent = contentItemData.channelTitle;
                 // thumbnail
-                const videoThumbnail = document.createElement('img');
-                videoThumbnail.className = 'video-thumbnail';
-                videoThumbnail.src = videoData.thumbnails.high.url;
+                const contentThumbnail = document.createElement('img');
+                contentThumbnail.className = 'content-item-thumbnail';
+                contentThumbnail.src = contentItemData.thumbnails.high.url;
                 // metadata
-                videoWrapper.setAttribute('metadata', JSON.stringify({
-                    videoId: videoItem.id.videoId,
-                    title: videoTitle.textContent,
-                    channelName: videoChannelName.textContent,
-                    thumbnailSrc: videoThumbnail.src
+                contentItemWrapper.setAttribute('metadata', JSON.stringify({
+                    kind: contentItem.id.kind,
+                    videoId: (contentItem.id.hasOwnProperty('videoId')) ? contentItem.id.videoId : '',
+                    title: contentItemTitle.textContent,
+                    channelName: contentItemChannelName.textContent,
+                    thumbnailSrc: contentThumbnail.src,
+                    shortDescription: contentItemData.description
                 }));
                 // render
-                videoWrapper.appendChild(videoTitle);
-                videoWrapper.appendChild(videoChannelName);
-                videoWrapper.appendChild(videoThumbnail);
-                videosWrapper.appendChild(videoWrapper);
+                contentItemWrapper.appendChild(contentItemTitle);
+                contentItemWrapper.appendChild(contentItemChannelName);
+                contentItemWrapper.appendChild(contentThumbnail);
+                contentItemsWrapper.appendChild(contentItemWrapper);
             }
-            let loadMoreBtn = document.querySelector('#load-next-page-results-btn');
+            let loadMoreWrapper = document.querySelector('#load-more-wrapper');
             if (jsonResp.hasOwnProperty('nextPageToken')) {
-                if (!loadMoreBtn) {
-                    loadMoreBtn = document.createElement('button');
+                if (!loadMoreWrapper) {
+                    loadMoreWrapper = document.createElement('div');
+                    loadMoreWrapper.id = 'load-more-wrapper';
+                    const loadMoreBtn = document.createElement('button');
                     loadMoreBtn.id = 'load-next-page-results-btn';
                     loadMoreBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
                         // update next page token
@@ -77,14 +108,19 @@ function showResults() {
                         return;
                     });
                     loadMoreBtn.textContent = 'Load more';
-                    document.body.appendChild(loadMoreBtn);
+                    loadMoreWrapper.appendChild(loadMoreBtn);
+                    document.body.appendChild(loadMoreWrapper);
                 }
             }
             else {
-                if (loadMoreBtn) {
-                    loadMoreBtn.remove();
+                if (loadMoreWrapper) {
+                    loadMoreWrapper.remove();
                 }
             }
+            // update quotas
+            quotasAmt -= QUOTAS_PER_CALL_AMT;
+            quotasAmtEl.textContent = quotasAmt.toString();
+            localStorage.setItem(quotasAmtKey, quotasAmt.toString());
         }
         catch (err) {
             console.log('Exception occured: ', err);
@@ -98,13 +134,13 @@ searchBtn.onclick = (e) => __awaiter(this, void 0, void 0, function* () {
         return;
     }
     // clear results
-    for (let i = videosWrapper.childElementCount - 1; i >= 0; i--) {
-        videosWrapper.children[i].remove();
+    for (let i = contentItemsWrapper.childElementCount - 1; i >= 0; i--) {
+        contentItemsWrapper.children[i].remove();
     }
     // remove load more btn
-    const loadMoreBtn = document.querySelector('#load-next-page-results-btn');
-    if (loadMoreBtn) {
-        loadMoreBtn.remove();
+    const loadMoreWrapper = document.querySelector('#load-more-wrapper');
+    if (loadMoreWrapper) {
+        loadMoreWrapper.remove();
     }
     // reset next page token
     nextPageToken = '';
@@ -121,14 +157,14 @@ document.body.onclick = (e) => {
     const elClickedClass = elClicked.className;
     const elClickedId = elClicked.id;
     // prevent the display from being removed
-    if (elClickedClass.includes('video-display') || elClickedId.includes('video-display')) {
+    if (elClickedClass.includes('bigger-display') || elClickedId.includes('bigger-display')) {
         return;
     }
-    removeVideoDisplay();
-    if (elClickedClass.includes('video')) {
-        const videoWrapper = (elClickedClass.includes('wrapper')) ? elClicked : elClicked.parentElement;
+    removeBiggerDisplay();
+    if (elClickedClass.includes('content-item')) {
+        const contentItemWrapper = (elClickedClass.includes('wrapper')) ? elClicked : elClicked.parentElement;
         window.scrollTo({ top: 0, left: 0 });
-        displayVideo(videoWrapper);
+        createBiggerDisplay(contentItemWrapper);
     }
 };
 function decodeEscaped(text) {
@@ -151,70 +187,105 @@ function getShortDescVersion(fullDesc) {
     }
     return [fullDesc, hasMore];
 }
-function displayVideo(videoWrapper) {
-    // get search result video metadata
-    const videoSearchResultMetadata = JSON.parse(videoWrapper.getAttribute('metadata'));
-    const videoId = videoSearchResultMetadata.videoId;
-    // video display wrapper
-    const videoDisplayWrapper = document.createElement('div');
-    videoDisplayWrapper.id = 'video-display-wrapper';
+function createBiggerDisplay(contentItemWrapper) {
+    // get search result content item metadata
+    const contentItemSearchResultMetadata = JSON.parse(contentItemWrapper.getAttribute('metadata'));
+    const kind = contentItemSearchResultMetadata.kind;
+    // bigger display wrapper
+    const biggerDisplayWrapper = document.createElement('div');
+    biggerDisplayWrapper.id = 'bigger-display-wrapper';
     // title 
-    const videoDisplayTitleEl = document.createElement('div');
-    videoDisplayTitleEl.id = 'video-display-title';
-    videoDisplayTitleEl.textContent = videoSearchResultMetadata.title;
-    // video
-    const videoFrame = document.createElement('iframe');
-    videoFrame.id = 'video-display-frame';
-    videoFrame.src = `https://www.youtube.com/embed/${videoId}`;
-    videoFrame.allowFullscreen = true;
+    const biggerDisplayTitleEl = document.createElement('div');
+    biggerDisplayTitleEl.id = 'bigger-display-title';
+    biggerDisplayTitleEl.textContent = contentItemSearchResultMetadata.title;
+    // frame
+    let biggerDisplayFrame;
+    let biggerDisplayDescriptionWrapper;
+    switch (kind) {
+        case 'youtube#video':
+            const videoId = contentItemSearchResultMetadata.videoId;
+            biggerDisplayFrame = document.createElement('iframe');
+            biggerDisplayFrame.src = `https://www.youtube.com/embed/${videoId}`;
+            biggerDisplayFrame.allowFullscreen = true;
+            // fetch full description
+            if (quotasAmt < QUOTAS_PER_VID_DESC_AMT) {
+                alert('Not enough quotas available. Come back tomorrow');
+                break;
+            }
+            let fullDescription;
+            fetch(`https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`)
+                .then((data) => data.json()
+                .then((json) => __awaiter(this, void 0, void 0, function* () {
+                fullDescription = json.items[0].snippet.description;
+                // update quotas
+                quotasAmt -= QUOTAS_PER_VID_DESC_AMT;
+                quotasAmtEl.textContent = quotasAmt.toString();
+                localStorage.setItem(quotasAmtKey, quotasAmt.toString());
+                // no description
+                if (fullDescription == '') {
+                    biggerDisplayDescription.textContent = 'No description';
+                    return;
+                }
+                // Replace search result description version with video description version
+                const shortDescValues = getShortDescVersion(fullDescription);
+                const shortDescVersion = shortDescValues[0];
+                biggerDisplayDescription.textContent = shortDescVersion;
+                const hasMore = shortDescValues[1];
+                if (hasMore) {
+                    const descReadMoreBtn = document.createElement('button');
+                    descReadMoreBtn.id = 'bigger-display-desc-read-more-btn';
+                    descReadMoreBtn.textContent = 'Read more';
+                    descReadMoreBtn.onclick = () => {
+                        biggerDisplayDescription.textContent = fullDescription;
+                        descReadMoreBtn.remove();
+                    };
+                    biggerDisplayDescriptionWrapper.appendChild(descReadMoreBtn);
+                }
+            })))
+                .catch((e) => { console.log('Exception occured: ', e); });
+            break;
+        case 'youtube#playlist':
+        case 'youtube#channel':
+            biggerDisplayFrame = document.createElement('img');
+            biggerDisplayFrame.src = contentItemSearchResultMetadata.thumbnailSrc;
+            break;
+    }
+    biggerDisplayFrame.id = 'bigger-display-frame';
     // channel
-    const videoChannelNameEl = document.createElement('div');
-    videoChannelNameEl.id = 'video-display-channel-name';
-    videoChannelNameEl.textContent = videoSearchResultMetadata.channelName;
+    const biggerDisplayChannelNameEl = document.createElement('div');
+    biggerDisplayChannelNameEl.id = 'bigger-display-channel-name';
+    biggerDisplayChannelNameEl.textContent = contentItemSearchResultMetadata.channelName;
     // description
-    const videoDescriptionWrapper = document.createElement('div');
-    videoDescriptionWrapper.id = 'video-display-description-wrapper';
-    const videoDescription = document.createElement('div');
-    videoDescription.id = 'video-display-description';
-    videoDescription.textContent = 'Loading...';
-    videoDescriptionWrapper.appendChild(videoDescription);
-    // fetch full description
-    let fullDescription;
-    fetch(`https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`)
-        .then((data) => data.json()
-        .then((json) => __awaiter(this, void 0, void 0, function* () {
-        fullDescription = json.items[0].snippet.description;
-        if (fullDescription == '') {
-            videoDescription.textContent = 'No description';
-            return;
+    biggerDisplayDescriptionWrapper = document.createElement('div');
+    biggerDisplayDescriptionWrapper.id = 'bigger-display-description-wrapper';
+    const biggerDisplayDescriptionLabel = document.createElement('label');
+    biggerDisplayDescriptionLabel.id = 'bigger-display-description-label';
+    biggerDisplayDescriptionLabel.textContent = 'Description';
+    biggerDisplayDescriptionWrapper.appendChild(biggerDisplayDescriptionLabel);
+    const biggerDisplayDescription = document.createElement('div');
+    biggerDisplayDescription.id = 'bigger-display-description';
+    if (kind == 'youtube#video') {
+        if (quotasAmt >= QUOTAS_PER_VID_DESC_AMT) {
+            biggerDisplayDescription.textContent = 'Loading...';
         }
-        // Replace search result description version with video description version
-        const shortDescValues = getShortDescVersion(fullDescription);
-        const shortDescVersion = shortDescValues[0];
-        videoDescription.textContent = shortDescVersion;
-        const hasMore = shortDescValues[1];
-        if (hasMore) {
-            const descReadMoreBtn = document.createElement('button');
-            descReadMoreBtn.id = 'video-display-desc-read-more-btn';
-            descReadMoreBtn.textContent = 'Read more';
-            descReadMoreBtn.onclick = () => {
-                videoDescription.textContent = fullDescription;
-                descReadMoreBtn.remove();
-            };
-            videoDescriptionWrapper.appendChild(descReadMoreBtn);
+        else {
+            biggerDisplayDescription.textContent = 'Failed to fetch video description';
         }
-    })))
-        .catch((e) => { console.log('Exception occured: ', e); });
+    }
+    else {
+        biggerDisplayDescription.textContent = contentItemSearchResultMetadata.shortDescription;
+    }
+    biggerDisplayDescriptionWrapper.appendChild(biggerDisplayDescription);
     // render
-    videoDisplayWrapper.appendChild(videoDisplayTitleEl);
-    videoDisplayWrapper.appendChild(videoFrame);
-    videoDisplayWrapper.appendChild(videoChannelNameEl);
-    videoDisplayWrapper.appendChild(videoDescriptionWrapper);
-    document.body.appendChild(videoDisplayWrapper);
+    biggerDisplayWrapper.appendChild(biggerDisplayTitleEl);
+    biggerDisplayWrapper.appendChild(biggerDisplayFrame);
+    biggerDisplayWrapper.appendChild(biggerDisplayChannelNameEl);
+    biggerDisplayWrapper.appendChild(biggerDisplayDescriptionWrapper);
+    document.body.appendChild(biggerDisplayWrapper);
 }
-function removeVideoDisplay() {
-    const videoDisplay = document.querySelector('#video-display-wrapper');
-    if (videoDisplay) {
-        videoDisplay.remove();
+function removeBiggerDisplay() {
+    const biggerDisplay = document.querySelector('#bigger-display-wrapper');
+    if (biggerDisplay) {
+        biggerDisplay.remove();
     }
 }
