@@ -7,16 +7,28 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const searchInput = document.querySelector('#search-input');
-const searchBtn = document.querySelector('#search-btn');
-const resultsPerPageDropdown = document.querySelector('#results-per-page-dropdown');
-const searchTypeDropdown = document.querySelector('#search-type-dropdown');
-const videosWrapper = document.querySelector('#videos-wrapper');
-const apiKey = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w';
-// Backup key
-// const apiKey: string = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk';
-let searchQuery, jsonResp, nextPageToken;
-let resultsPerPage = 10, searchType = 'video';
+let searchInput;
+let searchBtn;
+let resultsPerPageDropdown;
+let searchTypeDropdown;
+let videosWrapper;
+let apiKey;
+let searchQuery;
+let resultsPerPage, searchType;
+let jsonResp;
+let nextPageToken;
+(function init() {
+    searchInput = document.querySelector('#search-input');
+    searchBtn = document.querySelector('#search-btn');
+    resultsPerPageDropdown = document.querySelector('#results-per-page-dropdown');
+    searchTypeDropdown = document.querySelector('#search-type-dropdown');
+    videosWrapper = document.querySelector('#videos-wrapper');
+    apiKey = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w';
+    // Backup key
+    // apiKey = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk';
+    resultsPerPage = parseInt(resultsPerPageDropdown.value);
+    searchType = searchTypeDropdown.value;
+})();
 function showResults() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
