@@ -206,7 +206,7 @@ button:hover
 	border: 1px solid grey;
 	border-radius: 10px;
 }
-#bigger-display-description-label
+#bigger-display-desc-label
 {
 	display: block;
 	padding-top: 1rem;
@@ -214,13 +214,13 @@ button:hover
 	font-weight: bold;
 	color: #666;
 }
-#bigger-display-description
+#bigger-display-desc
 {
 	display: inline;
 	font-size: .85rem;
 	white-space: pre-wrap;
 }
-#bigger-display-description-read-more-btn
+#bigger-display-desc-read-more-btn
 {
 	width: fit-content;
 	margin-left: 10px;

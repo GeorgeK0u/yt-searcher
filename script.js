@@ -18,7 +18,7 @@ let resultsPerPageDropdown, searchTypeDropdown, channelInput, clearChannelBtn;
 let resultsWrapper;
 let loadMoreResultsBtn;
 // bigger display
-let biggerDisplayWrapper, biggerDisplayTitle, biggerDisplayFrame, biggerDisplayChannelBtn, biggerDisplayDescription, biggerDisplayDescriptionReadMoreBtn;
+let biggerDisplayWrapper, biggerDisplayTitle, biggerDisplayFrame, biggerDisplayChannelBtn, biggerDisplayDesc, biggerDisplayDescReadMoreBtn;
 // help vars 
 let searchQuery;
 let quotasAmt;
@@ -69,8 +69,8 @@ const QUOTAS_REFILL_AMT = 10000, QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_
     biggerDisplayWrapper.style.display = 'none';
     biggerDisplayTitle = document.querySelector('#bigger-display-title');
     biggerDisplayChannelBtn = document.querySelector('#bigger-display-channel-btn');
-    biggerDisplayDescription = document.querySelector('#bigger-display-description');
-    biggerDisplayDescriptionReadMoreBtn = document.querySelector('#bigger-display-description-read-more-btn');
+    biggerDisplayDesc = document.querySelector('#bigger-display-desc');
+    biggerDisplayDescReadMoreBtn = document.querySelector('#bigger-display-desc-read-more-btn');
     // help vars
     apiKey = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w';
     // backup key
@@ -128,7 +128,7 @@ function showResults() {
                     title: resultTitle.textContent,
                     channelName: resultChannelName.textContent,
                     thumbnailSrc: resultThumbnail.src,
-                    shortDescription: resultData.description
+                    shortDesc: resultData.description
                 }));
                 // render
                 resultWrapper.appendChild(resultTitle);
@@ -236,36 +236,36 @@ function showBiggerDisplay(resultWrapper) {
             biggerDisplayFrame = document.createElement('iframe');
             biggerDisplayFrame.src = `https://www.youtube.com/embed/${videoId}`;
             biggerDisplayFrame.allowFullscreen = true;
-            // fetch full description
+            // fetch full desc
             if (quotasAmt < QUOTAS_PER_VID_DESC_AMT) {
                 alert('Not enough quotas available. Come back tomorrow');
                 break;
             }
-            let fullDescription;
+            let fullDesc;
             fetch(`https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`)
                 .then((data) => data.json()
                 .then((json) => __awaiter(this, void 0, void 0, function* () {
-                fullDescription = json.items[0].snippet.description;
+                fullDesc = json.items[0].snippet.description;
                 // update quotas
                 quotasAmt -= QUOTAS_PER_VID_DESC_AMT;
                 quotasAmtEl.textContent = quotasAmt.toString();
                 localStorage.setItem(quotasAmtKey, quotasAmt.toString());
-                // no description
-                if (fullDescription == '') {
-                    biggerDisplayDescription.textContent = 'No description';
+                // no desc
+                if (fullDesc == '') {
+                    biggerDisplayDesc.textContent = 'No description';
                     return;
                 }
-                // Replace search result description version with video description version
-                const shortDescValues = getShortDescVersion(fullDescription);
+                // Replace search result desc version with video desc version
+                const shortDescValues = getShortDescVersion(fullDesc);
                 const shortDescVersion = shortDescValues[0];
-                biggerDisplayDescription.textContent = shortDescVersion;
+                biggerDisplayDesc.textContent = shortDescVersion;
                 const hasMore = shortDescValues[1];
                 if (hasMore) {
-                    biggerDisplayDescriptionReadMoreBtn.onclick = () => {
-                        biggerDisplayDescription.textContent = fullDescription;
-                        biggerDisplayDescriptionReadMoreBtn.style.display = 'none';
+                    biggerDisplayDescReadMoreBtn.onclick = () => {
+                        biggerDisplayDesc.textContent = fullDesc;
+                        biggerDisplayDescReadMoreBtn.style.display = 'none';
                     };
-                    biggerDisplayDescriptionReadMoreBtn.style.display = 'inline-block';
+                    biggerDisplayDescReadMoreBtn.style.display = 'inline-block';
                 }
             })))
                 .catch((e) => { console.log('Exception occured: ', e); });
@@ -290,17 +290,17 @@ function showBiggerDisplay(resultWrapper) {
         searchBtn.click();
     };
     biggerDisplayChannelBtn.textContent = resultMetadata.channelName;
-    // description
+    // desc
     if (kind == 'youtube#video') {
         if (quotasAmt >= QUOTAS_PER_VID_DESC_AMT) {
-            biggerDisplayDescription.textContent = 'Loading...';
+            biggerDisplayDesc.textContent = 'Loading...';
         }
         else {
-            biggerDisplayDescription.textContent = 'Failed to fetch video description';
+            biggerDisplayDesc.textContent = 'Failed to fetch video desc';
         }
     }
     else {
-        biggerDisplayDescription.textContent = resultMetadata.shortDescription;
+        biggerDisplayDesc.textContent = resultMetadata.shortDesc;
     }
     biggerDisplayWrapper.style.display = 'flex';
 }
@@ -310,8 +310,8 @@ function hideBiggerDisplay() {
         biggerDisplayFrame.remove();
     }
     // hide read more
-    if (biggerDisplayDescriptionReadMoreBtn.style.display != 'none') {
-        biggerDisplayDescriptionReadMoreBtn.style.display = 'none';
+    if (biggerDisplayDescReadMoreBtn.style.display != 'none') {
+        biggerDisplayDescReadMoreBtn.style.display = 'none';
     }
     // hide wrapper
     if (biggerDisplayWrapper.style.display != 'none') {
