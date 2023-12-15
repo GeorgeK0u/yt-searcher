@@ -20,16 +20,13 @@ let loadMoreResultsBtn;
 // bigger display
 let biggerDisplayWrapper, biggerDisplayTitle, biggerDisplayFrame, biggerDisplayChannelBtn, biggerDisplayDesc, biggerDisplayDescReadMoreBtn;
 // help vars 
-let searchQuery;
-let quotasAmt;
+let searchQuery, quotasAmt;
 let resultsPerPage, searchType, channelId;
-let apiKey;
-let jsonResp;
-let nextPageToken;
-let lastVisitDateKey;
-let quotasAmtKey;
+let jsonResp, nextPageToken;
 // constants
-const QUOTAS_REFILL_AMT = 10000, QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_AMT = 1;
+const API_KEY = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w', TODAY_DATE_STR = new Date().getDate().toString(), LAST_VISIT_DATE_KEY = 'lastVisitDate', QUOTAS_AMT_KEY = 'quotasAmt', QUOTAS_REFILL_AMT = 10000, QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_AMT = 1, INLINE_BLOCK_STR = 'inline-block', FLEX_STR = 'flex', NONE_STR = 'none', MAX_SHORT_DESC_CHARS = 450, RESULT_KIND = { video: 'youtube#video', playlist: 'youtube#playlist', channel: 'youtube#channel' };
+// backup api key
+// apiKey = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk';
 (function init() {
     // header
     // left side
@@ -37,7 +34,8 @@ const QUOTAS_REFILL_AMT = 10000, QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_
     searchBtn = document.querySelector('#search-btn');
     // right side
     quotasCostInfoLabel = document.querySelector('#quotas-cost-info-label');
-    quotasCostInfoLabel.title = `Search / Go to Channel: -${QUOTAS_PER_CALL_AMT} Quotas\nLoad more: -${QUOTAS_PER_CALL_AMT} Quotas\nVideo description: -${QUOTAS_PER_VID_DESC_AMT} Quotas`;
+    const quotasStr = 'Quotas';
+    quotasCostInfoLabel.title = `Search / Go to Channel: -${QUOTAS_PER_CALL_AMT} ${quotasStr}\nLoad more: -${QUOTAS_PER_CALL_AMT} ${quotasStr}\nVideo description: -${QUOTAS_PER_VID_DESC_AMT} ${quotasStr}`;
     quotasAmtEl = document.querySelector('#quotas-amount');
     // options
     resultsPerPageDropdown = document.querySelector('#results-per-page-dropdown');
@@ -52,13 +50,13 @@ const QUOTAS_REFILL_AMT = 10000, QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_
         channelInput.value = '';
         channelId = '';
         clearResults();
-        clearChannelBtn.style.display = 'none';
+        hideEl(clearChannelBtn);
     };
-    clearChannelBtn.style.display = 'none';
+    hideEl(clearChannelBtn);
     // results
     resultsWrapper = document.querySelector('#results-wrapper');
     loadMoreResultsBtn = document.querySelector('#load-more-results-btn');
-    loadMoreResultsBtn.style.display = 'none';
+    hideEl(loadMoreResultsBtn);
     loadMoreResultsBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
         // update next page token
         nextPageToken = jsonResp.nextPageToken;
@@ -66,29 +64,23 @@ const QUOTAS_REFILL_AMT = 10000, QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_
     });
     // bigger display	
     biggerDisplayWrapper = document.querySelector('#bigger-display-wrapper');
-    biggerDisplayWrapper.style.display = 'none';
+    hideEl(biggerDisplayWrapper);
     biggerDisplayTitle = document.querySelector('#bigger-display-title');
     biggerDisplayChannelBtn = document.querySelector('#bigger-display-channel-btn');
     biggerDisplayDesc = document.querySelector('#bigger-display-desc');
     biggerDisplayDescReadMoreBtn = document.querySelector('#bigger-display-desc-read-more-btn');
     // help vars
-    apiKey = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w';
-    // backup key
-    // apiKey = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk';
     resultsPerPage = parseInt(resultsPerPageDropdown.value);
     searchType = searchTypeDropdown.value;
     // get/update quotas
-    const todayDate = new Date().getDate().toString();
-    lastVisitDateKey = 'lastVisitDate';
-    quotasAmtKey = 'quotasAmt';
-    let lastVisitDate = localStorage.getItem(lastVisitDateKey);
+    let lastVisitDateStr = localStorage.getItem(LAST_VISIT_DATE_KEY);
     // reset
-    if (!lastVisitDate || lastVisitDate != todayDate) {
-        localStorage.setItem(lastVisitDateKey, todayDate);
-        lastVisitDate = todayDate;
-        localStorage.setItem(quotasAmtKey, QUOTAS_REFILL_AMT.toString());
+    if (!lastVisitDateStr || lastVisitDateStr != TODAY_DATE_STR) {
+        lastVisitDateStr = TODAY_DATE_STR;
+        localStorage.setItem(LAST_VISIT_DATE_KEY, TODAY_DATE_STR);
+        localStorage.setItem(QUOTAS_AMT_KEY, QUOTAS_REFILL_AMT.toString());
     }
-    quotasAmt = parseInt(localStorage.getItem(quotasAmtKey));
+    quotasAmt = parseInt(localStorage.getItem(QUOTAS_AMT_KEY));
     quotasAmtEl.textContent = quotasAmt.toString();
 })();
 function showResults() {
@@ -98,7 +90,7 @@ function showResults() {
             return;
         }
         try {
-            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerPage}&pageToken=${nextPageToken}&q=${searchQuery}&type=${searchType}&channelId=${channelId}&key=${apiKey}`);
+            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerPage}&pageToken=${nextPageToken}&q=${searchQuery}&type=${searchType}&channelId=${channelId}&key=${API_KEY}`);
             jsonResp = yield resp.json();
             // results
             const searchResults = jsonResp.items;
@@ -112,14 +104,19 @@ function showResults() {
                 const resultTitle = document.createElement('div');
                 resultTitle.className = 'result-title';
                 resultTitle.textContent = decodeEscaped(resultData.title);
+                resultWrapper.appendChild(resultTitle);
                 // channel
                 const resultChannelName = document.createElement('div');
                 resultChannelName.className = 'result-channel-name';
                 resultChannelName.textContent = resultData.channelTitle;
+                resultWrapper.appendChild(resultChannelName);
                 // thumbnail
                 const resultThumbnail = document.createElement('img');
                 resultThumbnail.className = 'result-thumbnail';
                 resultThumbnail.src = resultData.thumbnails.high.url;
+                resultWrapper.appendChild(resultThumbnail);
+                // render
+                resultsWrapper.appendChild(resultWrapper);
                 // metadata
                 resultWrapper.setAttribute('metadata', JSON.stringify({
                     kind: result.id.kind,
@@ -130,27 +127,20 @@ function showResults() {
                     thumbnailSrc: resultThumbnail.src,
                     shortDesc: resultData.description
                 }));
-                // render
-                resultWrapper.appendChild(resultTitle);
-                resultWrapper.appendChild(resultChannelName);
-                resultWrapper.appendChild(resultThumbnail);
-                resultsWrapper.appendChild(resultWrapper);
             }
             // update load more btn visibility
             if (jsonResp.hasOwnProperty('nextPageToken')) {
-                if (loadMoreResultsBtn.style.display == 'none') {
-                    loadMoreResultsBtn.style.display = 'inline-block';
+                if (getElDisplay(loadMoreResultsBtn) == NONE_STR) {
+                    setElDisplay(loadMoreResultsBtn, INLINE_BLOCK_STR);
                 }
             }
             else {
-                if (loadMoreResultsBtn.style.display != 'none') {
-                    loadMoreResultsBtn.style.display = 'none';
-                }
+                hideEl(loadMoreResultsBtn);
             }
             // update quotas
             quotasAmt -= QUOTAS_PER_CALL_AMT;
             quotasAmtEl.textContent = quotasAmt.toString();
-            localStorage.setItem(quotasAmtKey, quotasAmt.toString());
+            localStorage.setItem(QUOTAS_AMT_KEY, quotasAmt.toString());
         }
         catch (err) {
             console.log('Exception occured: ', err);
@@ -162,10 +152,7 @@ function clearResults() {
     for (let i = resultsWrapper.childElementCount - 1; i >= 0; i--) {
         resultsWrapper.children[i].remove();
     }
-    // hide load more btn
-    if (loadMoreResultsBtn.style.display != 'none') {
-        loadMoreResultsBtn.style.display = 'none';
-    }
+    hideEl(loadMoreResultsBtn);
     // reset next page token
     nextPageToken = '';
 }
@@ -215,7 +202,6 @@ function decodeEscaped(text) {
     }
 }
 function getShortDescVersion(fullDesc) {
-    const MAX_SHORT_DESC_CHARS = 450;
     const hasMore = fullDesc.length > MAX_SHORT_DESC_CHARS;
     if (hasMore) {
         const shortDescVersion = fullDesc.substring(0, MAX_SHORT_DESC_CHARS) + '...';
@@ -231,7 +217,7 @@ function showBiggerDisplay(resultWrapper) {
     biggerDisplayTitle.textContent = resultMetadata.title;
     // frame
     switch (kind) {
-        case 'youtube#video':
+        case RESULT_KIND.video:
             const videoId = resultMetadata.videoId;
             biggerDisplayFrame = document.createElement('iframe');
             biggerDisplayFrame.src = `https://www.youtube.com/embed/${videoId}`;
@@ -242,14 +228,14 @@ function showBiggerDisplay(resultWrapper) {
                 break;
             }
             let fullDesc;
-            fetch(`https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`)
+            fetch(`https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${API_KEY}`)
                 .then((data) => data.json()
                 .then((json) => __awaiter(this, void 0, void 0, function* () {
                 fullDesc = json.items[0].snippet.description;
                 // update quotas
                 quotasAmt -= QUOTAS_PER_VID_DESC_AMT;
                 quotasAmtEl.textContent = quotasAmt.toString();
-                localStorage.setItem(quotasAmtKey, quotasAmt.toString());
+                localStorage.setItem(QUOTAS_AMT_KEY, quotasAmt.toString());
                 // no desc
                 if (fullDesc == '') {
                     biggerDisplayDesc.textContent = 'No description';
@@ -263,15 +249,15 @@ function showBiggerDisplay(resultWrapper) {
                 if (hasMore) {
                     biggerDisplayDescReadMoreBtn.onclick = () => {
                         biggerDisplayDesc.textContent = fullDesc;
-                        biggerDisplayDescReadMoreBtn.style.display = 'none';
+                        hideEl(biggerDisplayDescReadMoreBtn);
                     };
-                    biggerDisplayDescReadMoreBtn.style.display = 'inline-block';
+                    setElDisplay(biggerDisplayDescReadMoreBtn, INLINE_BLOCK_STR);
                 }
             })))
                 .catch((e) => { console.log('Exception occured: ', e); });
             break;
-        case 'youtube#playlist':
-        case 'youtube#channel':
+        case RESULT_KIND.playlist:
+        case RESULT_KIND.channel:
             biggerDisplayFrame = document.createElement('img');
             biggerDisplayFrame.src = resultMetadata.thumbnailSrc;
             break;
@@ -285,13 +271,13 @@ function showBiggerDisplay(resultWrapper) {
         // update channel
         channelInput.value = resultMetadata.channelName;
         channelId = resultMetadata.channelId;
-        clearChannelBtn.style.display = 'inline-block';
+        setElDisplay(clearChannelBtn, INLINE_BLOCK_STR);
         // trigger search
         searchBtn.click();
     };
     biggerDisplayChannelBtn.textContent = resultMetadata.channelName;
     // desc
-    if (kind == 'youtube#video') {
+    if (kind == RESULT_KIND.video) {
         if (quotasAmt >= QUOTAS_PER_VID_DESC_AMT) {
             biggerDisplayDesc.textContent = 'Loading...';
         }
@@ -302,19 +288,24 @@ function showBiggerDisplay(resultWrapper) {
     else {
         biggerDisplayDesc.textContent = resultMetadata.shortDesc;
     }
-    biggerDisplayWrapper.style.display = 'flex';
+    setElDisplay(biggerDisplayWrapper, FLEX_STR);
 }
 function hideBiggerDisplay() {
     // remove frame
     if (biggerDisplayFrame) {
         biggerDisplayFrame.remove();
     }
-    // hide read more
-    if (biggerDisplayDescReadMoreBtn.style.display != 'none') {
-        biggerDisplayDescReadMoreBtn.style.display = 'none';
+    hideEl(biggerDisplayDescReadMoreBtn);
+    hideEl(biggerDisplayWrapper);
+}
+function hideEl(el) {
+    if (getElDisplay(el) != NONE_STR) {
+        setElDisplay(el, NONE_STR);
     }
-    // hide wrapper
-    if (biggerDisplayWrapper.style.display != 'none') {
-        biggerDisplayWrapper.style.display = 'none';
-    }
+}
+function getElDisplay(el) {
+    return el.style.display;
+}
+function setElDisplay(el, display) {
+    el.style.display = display;
 }
