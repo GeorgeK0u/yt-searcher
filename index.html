@@ -6,17 +6,21 @@
 	</head>
 
 	<body>
+		<!-- header -->
 		<header id='header-wrapper'>
+			<!-- left side -->
 			<form id='search-form-section'>
-				<input id='search-input' type='text' placeholder='Enter your search'/>
+				<input id='search-input' type='text' placeholder='Search'/>
 				<button id='search-btn' type='submit'>Search</button>
 			</form>
+			<!-- right side -->
 			<div id='quotas-wrapper'>
 				<label id='quotas-cost-info-label' class='info-label'>?</label>
 				<label id='quotas-label'>Quotas:</label>
 				<div id='quotas-amount'></div>
 			</div>
 		</header>
+		<!-- options -->
 		<div id='options-wrapper'>
 			<div id='results-per-page-dropdown-wrapper'>
 				<label id='results-per-page-label'>Results Per Page:</label>
@@ -35,8 +39,25 @@
 					<option value='channel'>Channel</option>
 				</select>
 			</div>
+			<div id='channel-wrapper'>
+				<label id='channel-label'>Channel:</label>
+				<input id='channel-input' placeholder='Any' readonly/>
+				<button id='clear-channel-btn'>x</button>
+			</div>
 		</div>
-		<div id='content-items-wrapper'></div>
+		<!-- results -->
+		<div id='results-wrapper'></div>
+		<button id='load-more-results-btn'>Load more</button>
+		<!-- bigger display -->
+		<div id='bigger-display-wrapper'>
+			<div id='bigger-display-title'></div>
+			<button id='bigger-display-channel-btn'></button>
+			<div id='bigger-display-description-wrapper'>
+				<label id='bigger-display-description-label'>Description</label>
+				<div id='bigger-display-description'></div>
+				<button id='bigger-display-description-read-more-btn'>Read more</button>
+			</div> 
+		</div>
 		<script src='./script.js'></script>
 	</body>
 </html>

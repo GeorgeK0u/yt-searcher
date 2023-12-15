@@ -7,33 +7,73 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-let searchInput;
-let searchBtn;
-let quotasCostInfoLabel;
-let quotasAmtEl;
-let resultsPerPageDropdown;
-let searchTypeDropdown;
-let contentItemsWrapper;
-let apiKey;
+// header
+// left side
+let searchInput, searchBtn;
+// right side
+let quotasCostInfoLabel, quotasAmtEl;
+// options
+let resultsPerPageDropdown, searchTypeDropdown, channelInput, clearChannelBtn;
+// results
+let resultsWrapper;
+let loadMoreResultsBtn;
+// bigger display
+let biggerDisplayWrapper, biggerDisplayTitle, biggerDisplayFrame, biggerDisplayChannelBtn, biggerDisplayDescription, biggerDisplayDescriptionReadMoreBtn;
+// help vars 
 let searchQuery;
-let resultsPerPage, searchType;
+let quotasAmt;
+let resultsPerPage, searchType, channelId;
+let apiKey;
 let jsonResp;
 let nextPageToken;
 let lastVisitDateKey;
 let quotasAmtKey;
-let quotasAmt;
+// constants
 const QUOTAS_REFILL_AMT = 10000, QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_AMT = 1;
 (function init() {
+    // header
+    // left side
     searchInput = document.querySelector('#search-input');
     searchBtn = document.querySelector('#search-btn');
+    // right side
     quotasCostInfoLabel = document.querySelector('#quotas-cost-info-label');
-    quotasCostInfoLabel.title = `Search: -${QUOTAS_PER_CALL_AMT} Quotas\nLoad more: -${QUOTAS_PER_CALL_AMT} Quotas\nVideo description: -${QUOTAS_PER_VID_DESC_AMT} Quotas`;
+    quotasCostInfoLabel.title = `Search / Go to Channel: -${QUOTAS_PER_CALL_AMT} Quotas\nLoad more: -${QUOTAS_PER_CALL_AMT} Quotas\nVideo description: -${QUOTAS_PER_VID_DESC_AMT} Quotas`;
     quotasAmtEl = document.querySelector('#quotas-amount');
+    // options
     resultsPerPageDropdown = document.querySelector('#results-per-page-dropdown');
     searchTypeDropdown = document.querySelector('#search-type-dropdown');
-    contentItemsWrapper = document.querySelector('#content-items-wrapper');
+    channelInput = document.querySelector('#channel-input');
+    channelId = '';
+    clearChannelBtn = document.querySelector('#clear-channel-btn');
+    clearChannelBtn.onclick = () => {
+        if (channelInput.value == '') {
+            return;
+        }
+        channelInput.value = '';
+        channelId = '';
+        clearResults();
+        clearChannelBtn.style.display = 'none';
+    };
+    clearChannelBtn.style.display = 'none';
+    // results
+    resultsWrapper = document.querySelector('#results-wrapper');
+    loadMoreResultsBtn = document.querySelector('#load-more-results-btn');
+    loadMoreResultsBtn.style.display = 'none';
+    loadMoreResultsBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
+        // update next page token
+        nextPageToken = jsonResp.nextPageToken;
+        showResults();
+    });
+    // bigger display	
+    biggerDisplayWrapper = document.querySelector('#bigger-display-wrapper');
+    biggerDisplayWrapper.style.display = 'none';
+    biggerDisplayTitle = document.querySelector('#bigger-display-title');
+    biggerDisplayChannelBtn = document.querySelector('#bigger-display-channel-btn');
+    biggerDisplayDescription = document.querySelector('#bigger-display-description');
+    biggerDisplayDescriptionReadMoreBtn = document.querySelector('#bigger-display-description-read-more-btn');
+    // help vars
     apiKey = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w';
-    // Backup key
+    // backup key
     // apiKey = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk';
     resultsPerPage = parseInt(resultsPerPageDropdown.value);
     searchType = searchTypeDropdown.value;
@@ -58,63 +98,53 @@ function showResults() {
             return;
         }
         try {
-            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerPage}&pageToken=${nextPageToken}&q=${searchQuery}&type=${searchType}&key=${apiKey}`);
+            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerPage}&pageToken=${nextPageToken}&q=${searchQuery}&type=${searchType}&channelId=${channelId}&key=${apiKey}`);
             jsonResp = yield resp.json();
-            console.log(jsonResp.items);
+            // results
             const searchResults = jsonResp.items;
             for (let i = 0; i < searchResults.length; i++) {
-                const contentItem = searchResults[i];
-                const contentItemData = contentItem.snippet;
-                const contentItemWrapper = document.createElement('div');
-                contentItemWrapper.className = 'content-item-wrapper';
+                const result = searchResults[i];
+                const resultData = result.snippet;
+                // wrapper
+                const resultWrapper = document.createElement('div');
+                resultWrapper.className = 'result-wrapper';
                 // title
-                const contentItemTitle = document.createElement('div');
-                contentItemTitle.className = 'content-item-title';
-                contentItemTitle.textContent = decodeEscaped(contentItemData.title);
+                const resultTitle = document.createElement('div');
+                resultTitle.className = 'result-title';
+                resultTitle.textContent = decodeEscaped(resultData.title);
                 // channel
-                const contentItemChannelName = document.createElement('div');
-                contentItemChannelName.className = 'content-item-channel-name';
-                contentItemChannelName.textContent = contentItemData.channelTitle;
+                const resultChannelName = document.createElement('div');
+                resultChannelName.className = 'result-channel-name';
+                resultChannelName.textContent = resultData.channelTitle;
                 // thumbnail
-                const contentThumbnail = document.createElement('img');
-                contentThumbnail.className = 'content-item-thumbnail';
-                contentThumbnail.src = contentItemData.thumbnails.high.url;
+                const resultThumbnail = document.createElement('img');
+                resultThumbnail.className = 'result-thumbnail';
+                resultThumbnail.src = resultData.thumbnails.high.url;
                 // metadata
-                contentItemWrapper.setAttribute('metadata', JSON.stringify({
-                    kind: contentItem.id.kind,
-                    videoId: (contentItem.id.hasOwnProperty('videoId')) ? contentItem.id.videoId : '',
-                    title: contentItemTitle.textContent,
-                    channelName: contentItemChannelName.textContent,
-                    thumbnailSrc: contentThumbnail.src,
-                    shortDescription: contentItemData.description
+                resultWrapper.setAttribute('metadata', JSON.stringify({
+                    kind: result.id.kind,
+                    channelId: resultData.channelId,
+                    videoId: (result.id.hasOwnProperty('videoId')) ? result.id.videoId : '',
+                    title: resultTitle.textContent,
+                    channelName: resultChannelName.textContent,
+                    thumbnailSrc: resultThumbnail.src,
+                    shortDescription: resultData.description
                 }));
                 // render
-                contentItemWrapper.appendChild(contentItemTitle);
-                contentItemWrapper.appendChild(contentItemChannelName);
-                contentItemWrapper.appendChild(contentThumbnail);
-                contentItemsWrapper.appendChild(contentItemWrapper);
+                resultWrapper.appendChild(resultTitle);
+                resultWrapper.appendChild(resultChannelName);
+                resultWrapper.appendChild(resultThumbnail);
+                resultsWrapper.appendChild(resultWrapper);
             }
-            let loadMoreWrapper = document.querySelector('#load-more-wrapper');
+            // update load more btn visibility
             if (jsonResp.hasOwnProperty('nextPageToken')) {
-                if (!loadMoreWrapper) {
-                    loadMoreWrapper = document.createElement('div');
-                    loadMoreWrapper.id = 'load-more-wrapper';
-                    const loadMoreBtn = document.createElement('button');
-                    loadMoreBtn.id = 'load-next-page-results-btn';
-                    loadMoreBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
-                        // update next page token
-                        nextPageToken = jsonResp.nextPageToken;
-                        showResults();
-                        return;
-                    });
-                    loadMoreBtn.textContent = 'Load more';
-                    loadMoreWrapper.appendChild(loadMoreBtn);
-                    document.body.appendChild(loadMoreWrapper);
+                if (loadMoreResultsBtn.style.display == 'none') {
+                    loadMoreResultsBtn.style.display = 'inline-block';
                 }
             }
             else {
-                if (loadMoreWrapper) {
-                    loadMoreWrapper.remove();
+                if (loadMoreResultsBtn.style.display != 'none') {
+                    loadMoreResultsBtn.style.display = 'none';
                 }
             }
             // update quotas
@@ -127,28 +157,34 @@ function showResults() {
         }
     });
 }
-searchBtn.onclick = (e) => __awaiter(this, void 0, void 0, function* () {
-    e.preventDefault();
-    searchQuery = searchInput.value;
-    if (searchQuery == '') {
-        return;
-    }
+function clearResults() {
     // clear results
-    for (let i = contentItemsWrapper.childElementCount - 1; i >= 0; i--) {
-        contentItemsWrapper.children[i].remove();
+    for (let i = resultsWrapper.childElementCount - 1; i >= 0; i--) {
+        resultsWrapper.children[i].remove();
     }
-    // remove load more btn
-    const loadMoreWrapper = document.querySelector('#load-more-wrapper');
-    if (loadMoreWrapper) {
-        loadMoreWrapper.remove();
+    // hide load more btn
+    if (loadMoreResultsBtn.style.display != 'none') {
+        loadMoreResultsBtn.style.display = 'none';
     }
     // reset next page token
     nextPageToken = '';
+}
+searchBtn.onclick = (e) => __awaiter(this, void 0, void 0, function* () {
+    // prevent form redirect
+    e.preventDefault();
+    // update search query
+    searchQuery = searchInput.value;
+    if (searchQuery == '' && channelId == '') {
+        return;
+    }
+    clearResults();
     showResults();
 });
+// change results per page amount
 resultsPerPageDropdown.onchange = () => {
     resultsPerPage = parseInt(resultsPerPageDropdown.value);
 };
+// change search type
 searchTypeDropdown.onchange = () => {
     searchType = searchTypeDropdown.value;
 };
@@ -160,11 +196,11 @@ document.body.onclick = (e) => {
     if (elClickedClass.includes('bigger-display') || elClickedId.includes('bigger-display')) {
         return;
     }
-    removeBiggerDisplay();
-    if (elClickedClass.includes('content-item')) {
-        const contentItemWrapper = (elClickedClass.includes('wrapper')) ? elClicked : elClicked.parentElement;
+    hideBiggerDisplay();
+    if (elClickedClass.includes('result')) {
+        const resultWrapper = (elClickedClass.includes('wrapper')) ? elClicked : elClicked.parentElement;
         window.scrollTo({ top: 0, left: 0 });
-        createBiggerDisplay(contentItemWrapper);
+        showBiggerDisplay(resultWrapper);
     }
 };
 function decodeEscaped(text) {
@@ -187,23 +223,16 @@ function getShortDescVersion(fullDesc) {
     }
     return [fullDesc, hasMore];
 }
-function createBiggerDisplay(contentItemWrapper) {
-    // get search result content item metadata
-    const contentItemSearchResultMetadata = JSON.parse(contentItemWrapper.getAttribute('metadata'));
-    const kind = contentItemSearchResultMetadata.kind;
-    // bigger display wrapper
-    const biggerDisplayWrapper = document.createElement('div');
-    biggerDisplayWrapper.id = 'bigger-display-wrapper';
+function showBiggerDisplay(resultWrapper) {
+    // result metadata
+    const resultMetadata = JSON.parse(resultWrapper.getAttribute('metadata'));
+    const kind = resultMetadata.kind;
     // title 
-    const biggerDisplayTitleEl = document.createElement('div');
-    biggerDisplayTitleEl.id = 'bigger-display-title';
-    biggerDisplayTitleEl.textContent = contentItemSearchResultMetadata.title;
+    biggerDisplayTitle.textContent = resultMetadata.title;
     // frame
-    let biggerDisplayFrame;
-    let biggerDisplayDescriptionWrapper;
     switch (kind) {
         case 'youtube#video':
-            const videoId = contentItemSearchResultMetadata.videoId;
+            const videoId = resultMetadata.videoId;
             biggerDisplayFrame = document.createElement('iframe');
             biggerDisplayFrame.src = `https://www.youtube.com/embed/${videoId}`;
             biggerDisplayFrame.allowFullscreen = true;
@@ -232,14 +261,11 @@ function createBiggerDisplay(contentItemWrapper) {
                 biggerDisplayDescription.textContent = shortDescVersion;
                 const hasMore = shortDescValues[1];
                 if (hasMore) {
-                    const descReadMoreBtn = document.createElement('button');
-                    descReadMoreBtn.id = 'bigger-display-desc-read-more-btn';
-                    descReadMoreBtn.textContent = 'Read more';
-                    descReadMoreBtn.onclick = () => {
+                    biggerDisplayDescriptionReadMoreBtn.onclick = () => {
                         biggerDisplayDescription.textContent = fullDescription;
-                        descReadMoreBtn.remove();
+                        biggerDisplayDescriptionReadMoreBtn.style.display = 'none';
                     };
-                    biggerDisplayDescriptionWrapper.appendChild(descReadMoreBtn);
+                    biggerDisplayDescriptionReadMoreBtn.style.display = 'inline-block';
                 }
             })))
                 .catch((e) => { console.log('Exception occured: ', e); });
@@ -247,23 +273,24 @@ function createBiggerDisplay(contentItemWrapper) {
         case 'youtube#playlist':
         case 'youtube#channel':
             biggerDisplayFrame = document.createElement('img');
-            biggerDisplayFrame.src = contentItemSearchResultMetadata.thumbnailSrc;
+            biggerDisplayFrame.src = resultMetadata.thumbnailSrc;
             break;
     }
     biggerDisplayFrame.id = 'bigger-display-frame';
+    biggerDisplayWrapper.insertBefore(biggerDisplayFrame, biggerDisplayChannelBtn);
     // channel
-    const biggerDisplayChannelNameEl = document.createElement('div');
-    biggerDisplayChannelNameEl.id = 'bigger-display-channel-name';
-    biggerDisplayChannelNameEl.textContent = contentItemSearchResultMetadata.channelName;
+    biggerDisplayChannelBtn.onclick = () => {
+        // clear search query
+        searchInput.value = '';
+        // update channel
+        channelInput.value = resultMetadata.channelName;
+        channelId = resultMetadata.channelId;
+        clearChannelBtn.style.display = 'inline-block';
+        // trigger search
+        searchBtn.click();
+    };
+    biggerDisplayChannelBtn.textContent = resultMetadata.channelName;
     // description
-    biggerDisplayDescriptionWrapper = document.createElement('div');
-    biggerDisplayDescriptionWrapper.id = 'bigger-display-description-wrapper';
-    const biggerDisplayDescriptionLabel = document.createElement('label');
-    biggerDisplayDescriptionLabel.id = 'bigger-display-description-label';
-    biggerDisplayDescriptionLabel.textContent = 'Description';
-    biggerDisplayDescriptionWrapper.appendChild(biggerDisplayDescriptionLabel);
-    const biggerDisplayDescription = document.createElement('div');
-    biggerDisplayDescription.id = 'bigger-display-description';
     if (kind == 'youtube#video') {
         if (quotasAmt >= QUOTAS_PER_VID_DESC_AMT) {
             biggerDisplayDescription.textContent = 'Loading...';
@@ -273,19 +300,21 @@ function createBiggerDisplay(contentItemWrapper) {
         }
     }
     else {
-        biggerDisplayDescription.textContent = contentItemSearchResultMetadata.shortDescription;
+        biggerDisplayDescription.textContent = resultMetadata.shortDescription;
     }
-    biggerDisplayDescriptionWrapper.appendChild(biggerDisplayDescription);
-    // render
-    biggerDisplayWrapper.appendChild(biggerDisplayTitleEl);
-    biggerDisplayWrapper.appendChild(biggerDisplayFrame);
-    biggerDisplayWrapper.appendChild(biggerDisplayChannelNameEl);
-    biggerDisplayWrapper.appendChild(biggerDisplayDescriptionWrapper);
-    document.body.appendChild(biggerDisplayWrapper);
+    biggerDisplayWrapper.style.display = 'flex';
 }
-function removeBiggerDisplay() {
-    const biggerDisplay = document.querySelector('#bigger-display-wrapper');
-    if (biggerDisplay) {
-        biggerDisplay.remove();
+function hideBiggerDisplay() {
+    // remove frame
+    if (biggerDisplayFrame) {
+        biggerDisplayFrame.remove();
+    }
+    // hide read more
+    if (biggerDisplayDescriptionReadMoreBtn.style.display != 'none') {
+        biggerDisplayDescriptionReadMoreBtn.style.display = 'none';
+    }
+    // hide wrapper
+    if (biggerDisplayWrapper.style.display != 'none') {
+        biggerDisplayWrapper.style.display = 'none';
     }
 }
