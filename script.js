@@ -9,11 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 // header
 // left side
-let searchInput, searchBtn;
+let searchInput, searchBtn, channelInput, clearChannelBtn;
 // right side
 let quotasCostInfoLabel, quotasAmtEl;
 // options
-let resultsPerPageDropdown, searchTypeDropdown, channelInput, clearChannelBtn;
+let resultsPerPageDropdown, searchTypeDropdown;
 // results
 let resultsWrapper;
 let loadMoreResultsBtn;
@@ -32,14 +32,6 @@ const API_KEY = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w', TODAY_DATE_STR = new 
     // left side
     searchInput = document.querySelector('#search-input');
     searchBtn = document.querySelector('#search-btn');
-    // right side
-    quotasCostInfoLabel = document.querySelector('#quotas-cost-info-label');
-    const quotasStr = 'Quotas';
-    quotasCostInfoLabel.title = `Search / Go to Channel: -${QUOTAS_PER_CALL_AMT} ${quotasStr}\nLoad more: -${QUOTAS_PER_CALL_AMT} ${quotasStr}\nVideo description: -${QUOTAS_PER_VID_DESC_AMT} ${quotasStr}`;
-    quotasAmtEl = document.querySelector('#quotas-amount');
-    // options
-    resultsPerPageDropdown = document.querySelector('#results-per-page-dropdown');
-    searchTypeDropdown = document.querySelector('#search-type-dropdown');
     channelInput = document.querySelector('#channel-input');
     channelId = '';
     clearChannelBtn = document.querySelector('#clear-channel-btn');
@@ -53,6 +45,14 @@ const API_KEY = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w', TODAY_DATE_STR = new 
         hideEl(clearChannelBtn);
     };
     hideEl(clearChannelBtn);
+    // right side
+    quotasCostInfoLabel = document.querySelector('#quotas-cost-info-label');
+    const quotasStr = 'Quotas';
+    quotasCostInfoLabel.title = `Search / Go to Channel: -${QUOTAS_PER_CALL_AMT} ${quotasStr}\nLoad more: -${QUOTAS_PER_CALL_AMT} ${quotasStr}\nVideo description: -${QUOTAS_PER_VID_DESC_AMT} ${quotasStr}`;
+    quotasAmtEl = document.querySelector('#quotas-amount');
+    // options
+    resultsPerPageDropdown = document.querySelector('#results-per-page-dropdown');
+    searchTypeDropdown = document.querySelector('#search-type-dropdown');
     // results
     resultsWrapper = document.querySelector('#results-wrapper');
     loadMoreResultsBtn = document.querySelector('#load-more-results-btn');

@@ -9,9 +9,14 @@
 		<!-- header -->
 		<header id='header-wrapper'>
 			<!-- left side -->
-			<form id='search-form-section'>
+			<form id='search-form'>
 				<input id='search-input' type='text' placeholder='Search'/>
 				<button id='search-btn' type='submit'>Search</button>
+				<div id='channel-wrapper'>
+					<label id='channel-label'>Channel:</label>
+					<input id='channel-input' placeholder='Any' readonly/>
+					<button id='clear-channel-btn'>x</button>
+				</div>
 			</form>
 			<!-- right side -->
 			<div id='quotas-wrapper'>
@@ -38,11 +43,6 @@
 					<option value='playlist'>Playlist</option>
 					<option value='channel'>Channel</option>
 				</select>
-			</div>
-			<div id='channel-wrapper'>
-				<label id='channel-label'>Channel:</label>
-				<input id='channel-input' placeholder='Any' readonly/>
-				<button id='clear-channel-btn'>x</button>
 			</div>
 		</div>
 		<!-- results -->
