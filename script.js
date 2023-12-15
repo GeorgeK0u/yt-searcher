@@ -13,15 +13,15 @@ let searchInput, searchBtn, channelInput, clearChannelBtn;
 // right side
 let quotasCostInfoLabel, quotasAmtEl;
 // options
-let resultsPerPageDropdown, searchTypeDropdown;
+let resultsPerPageDropdown, searchTypeDropdown, resultsOrderByDropdown;
 // results
 let resultsWrapper;
 let loadMoreResultsBtn;
 // bigger display
 let biggerDisplayWrapper, biggerDisplayTitle, biggerDisplayFrame, biggerDisplayChannelBtn, biggerDisplayDesc, biggerDisplayDescReadMoreBtn;
 // help vars 
-let searchQuery, quotasAmt;
-let resultsPerPage, searchType, channelId;
+let searchQuery, channelId, quotasAmt;
+let resultsPerPage, searchType, resultsOrderBy;
 let jsonResp, nextPageToken;
 // constants
 const API_KEY = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w', TODAY_DATE_STR = new Date().getDate().toString(), LAST_VISIT_DATE_KEY = 'lastVisitDate', QUOTAS_AMT_KEY = 'quotasAmt', QUOTAS_REFILL_AMT = 10000, QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_AMT = 1, INLINE_BLOCK_STR = 'inline-block', FLEX_STR = 'flex', NONE_STR = 'none', MAX_SHORT_DESC_CHARS = 450, RESULT_KIND = { video: 'youtube#video', playlist: 'youtube#playlist', channel: 'youtube#channel' };
@@ -53,6 +53,7 @@ const API_KEY = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w', TODAY_DATE_STR = new 
     // options
     resultsPerPageDropdown = document.querySelector('#results-per-page-dropdown');
     searchTypeDropdown = document.querySelector('#search-type-dropdown');
+    resultsOrderByDropdown = document.querySelector('#results-order-by-dropdown');
     // results
     resultsWrapper = document.querySelector('#results-wrapper');
     loadMoreResultsBtn = document.querySelector('#load-more-results-btn');
@@ -72,6 +73,7 @@ const API_KEY = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w', TODAY_DATE_STR = new 
     // help vars
     resultsPerPage = parseInt(resultsPerPageDropdown.value);
     searchType = searchTypeDropdown.value;
+    resultsOrderBy = resultsOrderByDropdown.value;
     // get/update quotas
     let lastVisitDateStr = localStorage.getItem(LAST_VISIT_DATE_KEY);
     // reset
@@ -90,7 +92,7 @@ function showResults() {
             return;
         }
         try {
-            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerPage}&pageToken=${nextPageToken}&q=${searchQuery}&type=${searchType}&channelId=${channelId}&key=${API_KEY}`);
+            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerPage}&pageToken=${nextPageToken}&q=${searchQuery}&type=${searchType}&order=${resultsOrderBy}&channelId=${channelId}&key=${API_KEY}`);
             jsonResp = yield resp.json();
             // results
             const searchResults = jsonResp.items;
@@ -174,6 +176,10 @@ resultsPerPageDropdown.onchange = () => {
 // change search type
 searchTypeDropdown.onchange = () => {
     searchType = searchTypeDropdown.value;
+};
+// change results order by
+resultsOrderByDropdown.onchange = () => {
+    resultsOrderBy = resultsOrderByDropdown.value;
 };
 document.body.onclick = (e) => {
     const elClicked = e.target;
