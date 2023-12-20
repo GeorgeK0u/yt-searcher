@@ -28,32 +28,72 @@
 		<!-- options -->
 		<div id='options-wrapper'>
 			<div id='results-per-page-dropdown-wrapper'>
-				<label id='results-per-page-label'>Results Per Page:</label>
+				<label id='results-per-page-label' class='option-label'>Results Per Page:</label>
 				<select id='results-per-page-dropdown'>
 					<option>10</option>
 					<option>25</option>
 					<option>50</option>
 				</select>
 			</div>
-			<div id='search-type-dropdown-wrapper'>
-				<label id='search-type-label'>Search Type:</label>
-				<select id='search-type-dropdown'>
-					<option value=''>All</option>
-					<option value='video'>Video</option>
-					<option value='playlist'>Playlist</option>
-					<option value='channel'>Channel</option>
-				</select>
+			<div id='search-type-video-release-time-dropdown-wrappers'>
+				<div id='search-type-dropdown-wrapper'>
+					<label id='search-type-label' class='option-label'>Search Type:</label>
+					<select id='search-type-dropdown'>
+						<option value=''>All</option>
+						<option value='video'>Video</option>
+						<option value='playlist'>Playlist</option>
+						<option value='channel'>Channel</option>
+					</select>
+				</div>
+				<div id='video-release-time-dropdown-wrapper'>
+					<label id='video-release-time-label' class='option-label'>Video Release Time:</label>
+					<select id='video-release-time-dropdown'>
+						<option value=''>Any</option>
+						<option value='completed'>Released</option>
+						<option value='live'>Live</option>
+						<option value='upcoming'>Upcoming</option>
+					</select>
+				</div>
 			</div>
-			<div id='results-order-by-dropdown-wrapper'>
-				<label id='results-order-by-label'>Order By:</label>
-				<select id='results-order-by-dropdown'>
-					<option value='date'>Date</option>
-					<option value='rating'>Rating</option>
-					<option value='relevance'>Relevance</option>
-					<option value='title'>Title</option>
-					<option value='videoCount'>Video Count</option>
-					<option value='viewCount'>View Count</option>
-				</select>
+			<div id='results-order-by-datetime-range-dropdown-wrappers'>
+				<div id='results-order-by-dropdown-wrapper'>
+					<label id='results-order-by-label' class='option-label'>Order By:</label>
+					<select id='results-order-by-dropdown'>
+						<option value='relevance'>Relevance</option>
+						<option value='date'>Date</option>
+						<option value='rating'>Rating</option>
+						<option value='title'>Title</option>
+						<option value='viewCount'>View Count</option>
+						<option id='channel-video-count-order-by-option' value='videoCount'>Video Count</option>
+						<option value='searchSortUnspecified'>Random</option>
+					</select>
+				</div>
+				<div id='results-datetime-range-wrapper'>
+					<label id='results-datetime-range-label' class='option-label'>Datetime Range:</label>
+					<div id='results-datetime-from-range-wrapper'>
+						<select id='results-datetime-from-range-dropdown'>
+							<option value='any'>Any</option>
+							<option value='today'>Today</option>
+							<option value='week'>This Week</option>
+							<option value='month'>This Month</option>
+							<option value='year'>This Year</option>
+							<option value='custom'>Custom</option>
+						</select>
+						<input id='results-datetime-from-range-custom-input' type='text' placeholder='DD/MM/YYYY (HH/MM/SS)'/>
+					</div>
+					<span>-</span>
+					<div id='results-datetime-to-range-wrapper'>
+						<select id='results-datetime-to-range-dropdown'>
+							<option value='any'>Any</option>
+							<option value='today'>Today</option>
+							<option value='week'>This Week</option>
+							<option value='month'>This Month</option>
+							<option value='year'>This Year</option>
+							<option value='custom'>Custom</option>
+						</select>
+						<input id='results-datetime-to-range-custom-input' type='text' placeholder='DD/MM/YYYY (HH/MM/SS)'/>
+					</div>
+				</div>
 			</div>
 		</div>
 		<!-- results -->

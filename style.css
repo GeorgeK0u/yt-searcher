@@ -112,11 +112,40 @@ button:hover
 {
 	padding-top: 2rem;
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 }
 #options-wrapper > *
 {
 	margin-right: 25px;
+}
+.option-label
+{
+	font-size: .9rem;
+}
+/* Video release time */
+#video-release-time-dropdown-wrapper
+{
+	margin-top: .65rem;
+}
+/* Datetime range */
+#results-datetime-range-wrapper
+{
+	margin-top: .65rem;
+	display: flex;
+}
+#results-datetime-range-wrapper > *
+{
+	margin-right: 5px;
+}
+#results-datetime-from-range-wrapper, #results-datetime-to-range-wrapper
+{
+	display: flex;
+	flex-direction: column;
+}
+#results-datetime-from-range-custom-input, #results-datetime-to-range-custom-input
+{
+	margin-top: .5rem;
+	font-size: .95rem;
 }
 
 /* results */
