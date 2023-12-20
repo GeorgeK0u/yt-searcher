@@ -35,7 +35,7 @@
 					<option>50</option>
 				</select>
 			</div>
-			<div id='search-type-video-release-time-dropdown-wrappers'>
+			<div id='search-type-video-specific-filters-wrapper'>
 				<div id='search-type-dropdown-wrapper'>
 					<label id='search-type-label' class='option-label'>Search Type:</label>
 					<select id='search-type-dropdown'>
@@ -43,6 +43,15 @@
 						<option value='video'>Video</option>
 						<option value='playlist'>Playlist</option>
 						<option value='channel'>Channel</option>
+					</select>
+				</div>
+				<div id='video-duration-dropdown-wrapper'>
+					<label id='video-duration-label' class='option-label'>Video Duration:</label>
+					<select id='video-duration-dropdown'>
+						<option value=''>Any</option>
+						<option value='short'>Short</option>
+						<option value='medium'>Medium</option>
+						<option value='long'>Long</option>
 					</select>
 				</div>
 				<div id='video-release-time-dropdown-wrapper'>
@@ -65,14 +74,13 @@
 						<option value='title'>Title</option>
 						<option value='viewCount'>View Count</option>
 						<option id='channel-video-count-order-by-option' value='videoCount'>Video Count</option>
-						<option value='searchSortUnspecified'>Random</option>
 					</select>
 				</div>
 				<div id='results-datetime-range-wrapper'>
 					<label id='results-datetime-range-label' class='option-label'>Datetime Range:</label>
 					<div id='results-datetime-from-range-wrapper'>
 						<select id='results-datetime-from-range-dropdown'>
-							<option value='any'>Any</option>
+							<option value=''>Any</option>
 							<option value='today'>Today</option>
 							<option value='week'>This Week</option>
 							<option value='month'>This Month</option>
@@ -84,7 +92,7 @@
 					<span>-</span>
 					<div id='results-datetime-to-range-wrapper'>
 						<select id='results-datetime-to-range-dropdown'>
-							<option value='any'>Any</option>
+							<option value=''>Any</option>
 							<option value='today'>Today</option>
 							<option value='week'>This Week</option>
 							<option value='month'>This Month</option>
@@ -94,6 +102,24 @@
 						<input id='results-datetime-to-range-custom-input' type='text' placeholder='DD/MM/YYYY (HH/MM/SS)'/>
 					</div>
 				</div>
+			</div>
+			<div id='results-lang-dropdown-wrapper'>
+				<label id='results-lang-label' class='option-label'>Language:</label>
+				<select id='results-lang-dropdown'>
+					<option value=''>All</option>
+					<option value='en'>English</option>
+					<option value='el'>Greek</option>
+					<option value='fr'>French</option>
+					<option value='ru'>Russian</option>
+				</select>
+			</div>
+			<div id='safe-search-dropdown-wrapper'>
+				<label id='safe-search-label' class='option-label'>Safe:</label>
+				<select id='safe-search-dropdown'>
+					<option value=''>Moderate</option>
+					<option value='strict'>Strict</option>
+					<option value='none'>None</option>
+				</select>
 			</div>
 		</div>
 		<!-- results -->

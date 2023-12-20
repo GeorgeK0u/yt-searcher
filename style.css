@@ -122,8 +122,8 @@ button:hover
 {
 	font-size: .9rem;
 }
-/* Video release time */
-#video-release-time-dropdown-wrapper
+/* Video duration & release time */
+#video-duration-dropdown-wrapper, #video-release-time-dropdown-wrapper
 {
 	margin-top: .65rem;
 }
