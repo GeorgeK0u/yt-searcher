@@ -25,19 +25,11 @@
 				<div id='quotas-amount'></div>
 			</div>
 		</header>
-		<!-- options -->
-		<div id='options-wrapper'>
-			<div id='results-per-page-dropdown-wrapper'>
-				<label id='results-per-page-label' class='option-label'>Results Per Page:</label>
-				<select id='results-per-page-dropdown'>
-					<option>10</option>
-					<option>25</option>
-					<option>50</option>
-				</select>
-			</div>
+		<!-- filters -->
+		<div id='filters-wrapper'>
 			<div id='search-type-video-specific-filters-wrapper'>
 				<div id='search-type-dropdown-wrapper'>
-					<label id='search-type-label' class='option-label'>Search Type:</label>
+					<label id='search-type-label' class='filter-label'>Search Type:</label>
 					<select id='search-type-dropdown'>
 						<option value=''>All</option>
 						<option value='video'>Video</option>
@@ -46,7 +38,7 @@
 					</select>
 				</div>
 				<div id='video-duration-dropdown-wrapper'>
-					<label id='video-duration-label' class='option-label'>Video Duration:</label>
+					<label id='video-duration-label' class='filter-label'>Video Duration:</label>
 					<select id='video-duration-dropdown'>
 						<option value=''>Any</option>
 						<option value='short'>Short</option>
@@ -55,7 +47,7 @@
 					</select>
 				</div>
 				<div id='video-release-time-dropdown-wrapper'>
-					<label id='video-release-time-label' class='option-label'>Video Release Time:</label>
+					<label id='video-release-time-label' class='filter-label'>Video Release Time:</label>
 					<select id='video-release-time-dropdown'>
 						<option value=''>Any</option>
 						<option value='completed'>Released</option>
@@ -65,19 +57,8 @@
 				</div>
 			</div>
 			<div id='results-order-by-datetime-range-dropdown-wrappers'>
-				<div id='results-order-by-dropdown-wrapper'>
-					<label id='results-order-by-label' class='option-label'>Order By:</label>
-					<select id='results-order-by-dropdown'>
-						<option value='relevance'>Relevance</option>
-						<option value='date'>Date</option>
-						<option value='rating'>Rating</option>
-						<option value='title'>Title</option>
-						<option value='viewCount'>View Count</option>
-						<option id='channel-video-count-order-by-option' value='videoCount'>Video Count</option>
-					</select>
-				</div>
 				<div id='results-datetime-range-wrapper'>
-					<label id='results-datetime-range-label' class='option-label'>Datetime Range:</label>
+					<label id='results-datetime-range-label' class='filter-label'>Datetime Range:</label>
 					<div id='results-datetime-from-range-wrapper'>
 						<select id='results-datetime-from-range-dropdown'>
 							<option value=''>Any</option>
@@ -104,7 +85,7 @@
 				</div>
 			</div>
 			<div id='results-lang-dropdown-wrapper'>
-				<label id='results-lang-label' class='option-label'>Language:</label>
+				<label id='results-lang-label' class='filter-label'>Language:</label>
 				<select id='results-lang-dropdown'>
 					<option value=''>All</option>
 					<option value='en'>English</option>
@@ -114,11 +95,33 @@
 				</select>
 			</div>
 			<div id='safe-search-dropdown-wrapper'>
-				<label id='safe-search-label' class='option-label'>Safe:</label>
+				<label id='safe-search-label' class='filter-label'>Safe:</label>
 				<select id='safe-search-dropdown'>
 					<option value=''>Moderate</option>
 					<option value='strict'>Strict</option>
 					<option value='none'>None</option>
+				</select>
+			</div>
+		</div>
+		<!-- options -->
+		<div id='options-wrapper'>
+			<div id='results-per-call-dropdown-wrapper'>
+				<label id='results-per-call-label' class='option-label'>Results Per Call:</label>
+				<select id='results-per-call-dropdown'>
+					<option>10</option>
+					<option>25</option>
+					<option>50</option>
+				</select>
+			</div>
+			<div id='results-order-by-dropdown-wrapper'>
+				<label id='results-order-by-label' class='option-label'>Order By:</label>
+				<select id='results-order-by-dropdown'>
+					<option value='relevance'>Relevance</option>
+					<option value='date'>Date</option>
+					<option value='rating'>Rating</option>
+					<option value='title'>Title</option>
+					<option value='viewCount'>View Count</option>
+					<option id='channel-video-count-order-by-option' value='videoCount'>Video Count</option>
 				</select>
 			</div>
 		</div>

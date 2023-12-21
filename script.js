@@ -12,8 +12,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 let searchInput, searchBtn, channelInput, clearChannelBtn;
 // right side
 let quotasCostInfoLabel, quotasAmtEl;
+// filters
+let searchTypeDropdown, vidDurationDropdownWrapper, vidDurationDropdown, vidReleaseTimeDropdownWrapper, vidReleaseTimeDropdown, channelVideoCountOrderByOption, resultsDatetimeFromRangeDropdown, resultsDatetimeFromRangeCustomInput, resultsDatetimeToRangeDropdown, resultsDatetimeToRangeCustomInput, resultsLangDropdown, safeSearchDropdown;
 // options
-let resultsPerPageDropdown, searchTypeDropdown, vidDurationDropdownWrapper, vidDurationDropdown, vidReleaseTimeDropdownWrapper, vidReleaseTimeDropdown, resultsOrderByDropdown, channelVideoCountOrderByOption, resultsDatetimeFromRangeDropdown, resultsDatetimeFromRangeCustomInput, resultsDatetimeToRangeDropdown, resultsDatetimeToRangeCustomInput, resultsLangDropdown, safeSearchDropdown;
+let resultsPerCallDropdown, resultsOrderByDropdown;
 // results
 let resultsWrapper;
 let loadMoreResultsBtn;
@@ -21,7 +23,7 @@ let loadMoreResultsBtn;
 let biggerDisplayWrapper, biggerDisplayTitle, biggerDisplayFrame, biggerDisplayChannelBtn, biggerDisplayDesc, biggerDisplayDescReadMoreBtn;
 // help vars 
 let searchQuery, channelId, quotasAmt;
-let resultsPerPage, searchType, vidDuration, vidReleaseTime, resultsOrderBy, resultsDatetimeFromRangeOption, resultsDatetimeToRangeOption, resultsLang, safeSearch;
+let resultsPerCall, searchType, vidDuration, vidReleaseTime, resultsOrderBy, resultsDatetimeFromRangeOption, resultsDatetimeToRangeOption, resultsLang, safeSearch;
 let jsonResp, nextPageToken;
 // constants
 const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new Date().getDate().toString(), LAST_VISIT_DATE_KEY = 'lastVisitDate', QUOTAS_AMT_KEY = 'quotasAmt', QUOTAS_REFILL_AMT = 10000, QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_AMT = 1, INLINE_STR = 'inline', BLOCK_STR = 'block', INLINE_BLOCK_STR = 'inline-block', FLEX_STR = 'flex', NONE_STR = 'none', MAX_SHORT_DESC_CHARS = 450, RESULT_KIND = { video: 'youtube#video', playlist: 'youtube#playlist', channel: 'youtube#channel' };
@@ -50,8 +52,7 @@ const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new 
     const quotasStr = 'Quotas';
     quotasCostInfoLabel.title = `Search / Go to Channel: -${QUOTAS_PER_CALL_AMT} ${quotasStr}\nLoad more: -${QUOTAS_PER_CALL_AMT} ${quotasStr}\nVideo description: -${QUOTAS_PER_VID_DESC_AMT} ${quotasStr}`;
     quotasAmtEl = document.querySelector('#quotas-amount');
-    // options
-    resultsPerPageDropdown = document.querySelector('#results-per-page-dropdown');
+    // filters
     searchTypeDropdown = document.querySelector('#search-type-dropdown');
     vidDurationDropdownWrapper = document.querySelector('#video-duration-dropdown-wrapper');
     hideEl(vidDurationDropdownWrapper);
@@ -59,7 +60,6 @@ const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new 
     vidReleaseTimeDropdownWrapper = document.querySelector('#video-release-time-dropdown-wrapper');
     hideEl(vidReleaseTimeDropdownWrapper);
     vidReleaseTimeDropdown = document.querySelector('#video-release-time-dropdown');
-    resultsOrderByDropdown = document.querySelector('#results-order-by-dropdown');
     channelVideoCountOrderByOption = document.querySelector('#channel-video-count-order-by-option');
     hideEl(channelVideoCountOrderByOption);
     resultsDatetimeFromRangeDropdown = document.querySelector('#results-datetime-from-range-dropdown');
@@ -70,6 +70,9 @@ const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new 
     hideEl(resultsDatetimeToRangeCustomInput);
     resultsLangDropdown = document.querySelector('#results-lang-dropdown');
     safeSearchDropdown = document.querySelector('#safe-search-dropdown');
+    // options
+    resultsPerCallDropdown = document.querySelector('#results-per-call-dropdown');
+    resultsOrderByDropdown = document.querySelector('#results-order-by-dropdown');
     // results
     resultsWrapper = document.querySelector('#results-wrapper');
     loadMoreResultsBtn = document.querySelector('#load-more-results-btn');
@@ -87,15 +90,15 @@ const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new 
     biggerDisplayDesc = document.querySelector('#bigger-display-desc');
     biggerDisplayDescReadMoreBtn = document.querySelector('#bigger-display-desc-read-more-btn');
     // help vars
-    resultsPerPage = parseInt(resultsPerPageDropdown.value);
-    searchType = searchTypeDropdown.value;
-    vidDuration = vidDurationDropdown.value;
-    vidReleaseTime = vidReleaseTimeDropdown.value;
-    resultsOrderBy = resultsOrderByDropdown.value;
-    resultsDatetimeFromRangeOption = resultsDatetimeFromRangeDropdown.value;
-    resultsDatetimeToRangeOption = resultsDatetimeToRangeDropdown.value;
-    resultsLang = resultsLangDropdown.value;
-    safeSearch = safeSearchDropdown.value;
+    // update dropdown values
+    const dropdowns = [searchTypeDropdown, vidDurationDropdown, vidReleaseTimeDropdown, resultsDatetimeFromRangeDropdown, resultsDatetimeToRangeDropdown, resultsLangDropdown, safeSearchDropdown, resultsPerCallDropdown, resultsOrderByDropdown];
+    for (const dropdown of dropdowns) {
+        updateDropdownValue(dropdown);
+        dropdown.onchange = () => {
+            updateDropdownValue(dropdown);
+        };
+    }
+    nextPageToken = '';
     // get/update quotas
     let lastVisitDateStr = localStorage.getItem(LAST_VISIT_DATE_KEY);
     // reset
@@ -107,9 +110,13 @@ const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new 
     quotasAmt = parseInt(localStorage.getItem(QUOTAS_AMT_KEY));
     quotasAmtEl.textContent = quotasAmt.toString();
 })();
-function showResults() {
+function showResults(clear = false) {
     return __awaiter(this, void 0, void 0, function* () {
         if (quotasAmt < QUOTAS_PER_CALL_AMT) {
+            // clear previous
+            if (clear) {
+                clearResults();
+            }
             alert('Not enough quotas available. Come back tomorrow');
             return;
         }
@@ -121,23 +128,30 @@ function showResults() {
             const vidEventTypePart = (getElDisplay(vidReleaseTimeDropdownWrapper) != NONE_STR && vidReleaseTime != '') ? `&eventType=${vidReleaseTime}` : '';
             // datetime range
             const datetimeRangeValues = getDatetimeRange();
-            console.log(datetimeRangeValues);
             const datetimeFromRange = datetimeRangeValues[0];
             const publishedAfterPart = (datetimeFromRange != '') ? `&publishedAfter=${datetimeFromRange}` : '';
             const datetimeToRange = datetimeRangeValues[1];
             const publishedBeforePart = (datetimeToRange != '') ? `&publishedBefore=${datetimeToRange}` : '';
-            //
+            // channel id
+            const channelIdPart = (channelId != '') ? `&channelId=${channelId}` : '';
             // results language
             const resultsLangPart = (resultsLang != '') ? `&relevanceLanguage=${resultsLang}` : '';
             // safe search
             const safeSearchPart = (safeSearch != '') ? `&safeSearch=${safeSearch}` : '';
-            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerPage}&pageToken=${nextPageToken}&q=${searchQuery}${searchTypePart}${vidDurationPart}${vidEventTypePart}&order=${resultsOrderBy}${publishedAfterPart}${publishedBeforePart}&channelId=${channelId}${resultsLangPart}${safeSearchPart}&key=${API_KEY}`);
+            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerCall}&pageToken=${nextPageToken}&q=${searchQuery}${searchTypePart}${vidDurationPart}${vidEventTypePart}&order=${resultsOrderBy}${publishedAfterPart}${publishedBeforePart}${channelIdPart}${resultsLangPart}${safeSearchPart}&key=${API_KEY}`);
             jsonResp = yield resp.json();
-            console.log(jsonResp);
             // results
             if (!jsonResp.hasOwnProperty('items')) {
+                // clear previous
+                if (clear) {
+                    clearResults();
+                }
                 alert('Not enough quotas available. Come back tomorrow');
                 return;
+            }
+            // clear previous
+            if (clear) {
+                clearResults();
             }
             const searchResults = jsonResp.items;
             for (let i = 0; i < searchResults.length; i++) {
@@ -206,54 +220,13 @@ function clearResults() {
 searchBtn.onclick = (e) => __awaiter(this, void 0, void 0, function* () {
     // prevent form redirect
     e.preventDefault();
+    // prevent holding enter down
+    searchBtn.blur();
     // update search query
     searchQuery = searchInput.value;
-    clearResults();
-    showResults();
+    const clearPrevious = true;
+    showResults(clearPrevious);
 });
-// change results per page amount
-resultsPerPageDropdown.onchange = () => {
-    resultsPerPage = parseInt(resultsPerPageDropdown.value);
-};
-// change search type
-searchTypeDropdown.onchange = () => {
-    searchType = searchTypeDropdown.value;
-    // video specific filters
-    setElDisplay(vidDurationDropdownWrapper, (searchType == 'video') ? BLOCK_STR : NONE_STR);
-    setElDisplay(vidReleaseTimeDropdownWrapper, (searchType == 'video') ? BLOCK_STR : NONE_STR);
-    // channel specific order by option
-    setElDisplay(channelVideoCountOrderByOption, (searchType == 'channel') ? INLINE_STR : NONE_STR);
-};
-// change video duration option
-vidDurationDropdown.onchange = () => {
-    vidDuration = vidDurationDropdown.value;
-};
-// change video release time option
-vidReleaseTimeDropdown.onchange = () => {
-    vidReleaseTime = vidReleaseTimeDropdown.value;
-};
-// change results order by
-resultsOrderByDropdown.onchange = () => {
-    resultsOrderBy = resultsOrderByDropdown.value;
-};
-// change results datetime from range option
-resultsDatetimeFromRangeDropdown.onchange = () => {
-    resultsDatetimeFromRangeOption = resultsDatetimeFromRangeDropdown.value;
-    setElDisplay(resultsDatetimeFromRangeCustomInput, (resultsDatetimeFromRangeOption == 'custom') ? INLINE_BLOCK_STR : NONE_STR);
-};
-// change results datetime to range option
-resultsDatetimeToRangeDropdown.onchange = () => {
-    resultsDatetimeToRangeOption = resultsDatetimeToRangeDropdown.value;
-    setElDisplay(resultsDatetimeToRangeCustomInput, (resultsDatetimeToRangeOption == 'custom') ? INLINE_BLOCK_STR : NONE_STR);
-};
-// change results language option
-resultsLangDropdown.onchange = () => {
-    resultsLang = resultsLangDropdown.value;
-};
-// change safe search option
-safeSearchDropdown.onchange = () => {
-    safeSearch = safeSearchDropdown.value;
-};
 document.body.onclick = (e) => {
     const elClicked = e.target;
     const elClickedClass = elClicked.className;
@@ -583,4 +556,33 @@ function convertDatetimeToRFC(datetime) {
     rfcDatetime = rfcDatetime.replace(' ', 'T');
     rfcDatetime += 'Z';
     return rfcDatetime;
+}
+function updateDropdownValue(dropdown) {
+    if (dropdown.id == searchTypeDropdown.id) {
+        searchType = dropdown.value;
+    }
+    else if (dropdown.id == vidDurationDropdown.id) {
+        vidDuration = dropdown.value;
+    }
+    else if (dropdown.id == vidReleaseTimeDropdown.id) {
+        vidReleaseTime = dropdown.value;
+    }
+    else if (dropdown.id == resultsDatetimeFromRangeDropdown.id) {
+        resultsDatetimeFromRangeOption = dropdown.value;
+    }
+    else if (dropdown.id == resultsDatetimeToRangeDropdown.id) {
+        resultsDatetimeToRangeOption = dropdown.value;
+    }
+    else if (dropdown.id == resultsLangDropdown.id) {
+        resultsLang = dropdown.value;
+    }
+    else if (dropdown.id == safeSearchDropdown.id) {
+        safeSearch = dropdown.value;
+    }
+    else if (dropdown.id == resultsPerCallDropdown.id) {
+        resultsPerCall = parseInt(dropdown.value);
+    }
+    else if (dropdown.id == resultsOrderByDropdown.id) {
+        resultsOrderBy = dropdown.value;
+    }
 }
