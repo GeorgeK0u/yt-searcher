@@ -19,8 +19,8 @@ let resultsPerCallDropdown, resultsOrderByDropdown;
 // results
 let resultsWrapper;
 let loadMoreResultsBtn;
-// bigger display
-let biggerDisplayWrapper, biggerDisplayTitle, biggerDisplayFrame, biggerDisplayChannelBtn, biggerDisplayDesc, biggerDisplayDescReadMoreBtn;
+// big display
+let bigDisplayWrapper, bigDisplayTitle, bigDisplayFrame, bigDisplayChannelBtn, bigDisplayDesc, bigDisplayDescReadMoreBtn;
 // help vars 
 let searchQuery, channelId, quotasAmt;
 let resultsPerCall, searchType, vidDuration, vidReleaseTime, resultsOrderBy, resultsDatetimeFromRangeOption, resultsDatetimeToRangeOption, resultsLang, safeSearch;
@@ -34,8 +34,17 @@ const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new 
     // left side
     searchInput = document.querySelector('#search-input');
     searchBtn = document.querySelector('#search-btn');
+    searchBtn.onclick = (e) => {
+        // prevent form redirect
+        e.preventDefault();
+        // prevent holding enter down
+        searchBtn.blur();
+        // update search query
+        searchQuery = searchInput.value;
+        const clearPrevious = true;
+        showResults(clearPrevious);
+    };
     channelInput = document.querySelector('#channel-input');
-    channelId = '';
     clearChannelBtn = document.querySelector('#clear-channel-btn');
     clearChannelBtn.onclick = () => {
         if (channelInput.value == '') {
@@ -82,13 +91,13 @@ const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new 
         nextPageToken = jsonResp.nextPageToken;
         showResults();
     });
-    // bigger display	
-    biggerDisplayWrapper = document.querySelector('#bigger-display-wrapper');
-    hideEl(biggerDisplayWrapper);
-    biggerDisplayTitle = document.querySelector('#bigger-display-title');
-    biggerDisplayChannelBtn = document.querySelector('#bigger-display-channel-btn');
-    biggerDisplayDesc = document.querySelector('#bigger-display-desc');
-    biggerDisplayDescReadMoreBtn = document.querySelector('#bigger-display-desc-read-more-btn');
+    // big display	
+    bigDisplayWrapper = document.querySelector('#big-display-wrapper');
+    hideEl(bigDisplayWrapper);
+    bigDisplayTitle = document.querySelector('#big-display-title');
+    bigDisplayChannelBtn = document.querySelector('#big-display-channel-btn');
+    bigDisplayDesc = document.querySelector('#big-display-desc');
+    bigDisplayDescReadMoreBtn = document.querySelector('#big-display-desc-read-more-btn');
     // help vars
     // update dropdown values
     const dropdowns = [searchTypeDropdown, vidDurationDropdown, vidReleaseTimeDropdown, resultsDatetimeFromRangeDropdown, resultsDatetimeToRangeDropdown, resultsLangDropdown, safeSearchDropdown, resultsPerCallDropdown, resultsOrderByDropdown];
@@ -99,6 +108,7 @@ const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new 
         };
     }
     nextPageToken = '';
+    channelId = '';
     // get/update quotas
     let lastVisitDateStr = localStorage.getItem(LAST_VISIT_DATE_KEY);
     // reset
@@ -108,15 +118,30 @@ const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new 
         localStorage.setItem(QUOTAS_AMT_KEY, QUOTAS_REFILL_AMT.toString());
     }
     quotasAmt = parseInt(localStorage.getItem(QUOTAS_AMT_KEY));
-    quotasAmtEl.textContent = quotasAmt.toString();
+    const updateStoredQuotas = false;
+    updateQuotas(updateStoredQuotas);
+    // handle big display show/hide
+    document.body.onclick = (e) => {
+        const elClicked = e.target;
+        const elClickedClass = elClicked.className;
+        const elClickedId = elClicked.id;
+        // prevent the display from being removed
+        if (elClickedClass.includes('big-display') || elClickedId.includes('big-display')) {
+            return;
+        }
+        hideBigDisplay();
+        if (elClickedClass.includes('result')) {
+            // scroll to top
+            window.scrollTo({ top: 0, left: 0 });
+            // show result on big display
+            const resultWrapper = (elClickedClass.includes('wrapper')) ? elClicked : elClicked.parentElement;
+            showBigDisplay(resultWrapper);
+        }
+    };
 })();
 function showResults(clear = false) {
     return __awaiter(this, void 0, void 0, function* () {
         if (quotasAmt < QUOTAS_PER_CALL_AMT) {
-            // clear previous
-            if (clear) {
-                clearResults();
-            }
             alert('Not enough quotas available. Come back tomorrow');
             return;
         }
@@ -136,24 +161,28 @@ function showResults(clear = false) {
             const channelIdPart = (channelId != '') ? `&channelId=${channelId}` : '';
             // results language
             const resultsLangPart = (resultsLang != '') ? `&relevanceLanguage=${resultsLang}` : '';
-            // safe search
-            const safeSearchPart = (safeSearch != '') ? `&safeSearch=${safeSearch}` : '';
-            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerCall}&pageToken=${nextPageToken}&q=${searchQuery}${searchTypePart}${vidDurationPart}${vidEventTypePart}&order=${resultsOrderBy}${publishedAfterPart}${publishedBeforePart}${channelIdPart}${resultsLangPart}${safeSearchPart}&key=${API_KEY}`);
+            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerCall}&pageToken=${nextPageToken}&q=${searchQuery}${searchTypePart}${vidDurationPart}${vidEventTypePart}&order=${resultsOrderBy}${publishedAfterPart}${publishedBeforePart}${channelIdPart}${resultsLangPart}&safeSearch=${safeSearch}&key=${API_KEY}`);
             jsonResp = yield resp.json();
             // results
+            // User has used their quotas outside this app as well
             if (!jsonResp.hasOwnProperty('items')) {
-                // clear previous
-                if (clear) {
-                    clearResults();
-                }
                 alert('Not enough quotas available. Come back tomorrow');
                 return;
             }
-            // clear previous
+            // update quotas
+            quotasAmt -= QUOTAS_PER_CALL_AMT;
+            updateQuotas();
+            // clear previous results
             if (clear) {
                 clearResults();
             }
             const searchResults = jsonResp.items;
+            // no results
+            if (searchResults.length == 0) {
+                alert('No results found');
+                return;
+            }
+            // show/append results
             for (let i = 0; i < searchResults.length; i++) {
                 const result = searchResults[i];
                 const resultData = result.snippet;
@@ -193,14 +222,8 @@ function showResults(clear = false) {
                 setElDisplay(loadMoreResultsBtn, INLINE_BLOCK_STR);
             }
             else {
+                // hide when no more results available
                 hideEl(loadMoreResultsBtn);
-            }
-            // update quotas
-            quotasAmt -= QUOTAS_PER_CALL_AMT;
-            quotasAmtEl.textContent = quotasAmt.toString();
-            localStorage.setItem(QUOTAS_AMT_KEY, quotasAmt.toString());
-            if (searchResults.length == 0) {
-                alert('No results found');
             }
         }
         catch (err) {
@@ -217,31 +240,101 @@ function clearResults() {
     // reset next page token
     nextPageToken = '';
 }
-searchBtn.onclick = (e) => __awaiter(this, void 0, void 0, function* () {
-    // prevent form redirect
-    e.preventDefault();
-    // prevent holding enter down
-    searchBtn.blur();
-    // update search query
-    searchQuery = searchInput.value;
-    const clearPrevious = true;
-    showResults(clearPrevious);
-});
-document.body.onclick = (e) => {
-    const elClicked = e.target;
-    const elClickedClass = elClicked.className;
-    const elClickedId = elClicked.id;
-    // prevent the display from being removed
-    if (elClickedClass.includes('bigger-display') || elClickedId.includes('bigger-display')) {
+function showBigDisplay(resultWrapper) {
+    // result metadata
+    const resultMetadata = JSON.parse(resultWrapper.getAttribute('metadata'));
+    const kind = resultMetadata.kind;
+    // title 
+    bigDisplayTitle.textContent = resultMetadata.title;
+    // frame
+    switch (kind) {
+        case RESULT_KIND.video:
+            const videoId = resultMetadata.videoId;
+            bigDisplayFrame = document.createElement('iframe');
+            bigDisplayFrame.src = `https://www.youtube.com/embed/${videoId}`;
+            bigDisplayFrame.allowFullscreen = true;
+            // fetch full desc
+            if (quotasAmt < QUOTAS_PER_VID_DESC_AMT) {
+                break;
+            }
+            let fullDesc;
+            fetch(`https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${API_KEY}`)
+                .then((data) => data.json()
+                .then((json) => {
+                fullDesc = json.items[0].snippet.description;
+                // update quotas
+                quotasAmt -= QUOTAS_PER_VID_DESC_AMT;
+                updateQuotas();
+                // no desc
+                if (fullDesc == '') {
+                    bigDisplayDesc.textContent = 'No description';
+                    return;
+                }
+                // Replace search result desc version with video desc version
+                const shortDescValues = getShortDescVersion(fullDesc);
+                const shortDescVersion = shortDescValues[0];
+                bigDisplayDesc.textContent = shortDescVersion;
+                const hasMore = shortDescValues[1];
+                if (hasMore) {
+                    bigDisplayDescReadMoreBtn.onclick = () => {
+                        bigDisplayDesc.textContent = fullDesc;
+                        hideEl(bigDisplayDescReadMoreBtn);
+                    };
+                    setElDisplay(bigDisplayDescReadMoreBtn, INLINE_BLOCK_STR);
+                }
+            }))
+                .catch((e) => { console.log('Exception occured: ', e); });
+            break;
+        case RESULT_KIND.playlist:
+        case RESULT_KIND.channel:
+            bigDisplayFrame = document.createElement('img');
+            bigDisplayFrame.src = resultMetadata.thumbnailSrc;
+            break;
+    }
+    bigDisplayFrame.id = 'big-display-frame';
+    bigDisplayWrapper.insertBefore(bigDisplayFrame, bigDisplayChannelBtn);
+    // channel
+    bigDisplayChannelBtn.onclick = () => {
+        // clear search query
+        searchInput.value = '';
+        // update channel
+        channelInput.value = resultMetadata.channelName;
+        channelId = resultMetadata.channelId;
+        setElDisplay(clearChannelBtn, INLINE_BLOCK_STR);
+        // trigger search
+        searchBtn.click();
+    };
+    bigDisplayChannelBtn.textContent = resultMetadata.channelName;
+    // desc
+    if (kind == RESULT_KIND.video && quotasAmt >= QUOTAS_PER_VID_DESC_AMT) {
+        bigDisplayDesc.textContent = 'Loading...';
+    }
+    else {
+        bigDisplayDesc.textContent = resultMetadata.shortDesc;
+    }
+    setElDisplay(bigDisplayWrapper, FLEX_STR);
+}
+function hideBigDisplay() {
+    // remove frame
+    if (bigDisplayFrame) {
+        bigDisplayFrame.remove();
+    }
+    hideEl(bigDisplayDescReadMoreBtn);
+    hideEl(bigDisplayWrapper);
+}
+// help functions
+function getElDisplay(el) {
+    return el.style.display;
+}
+function setElDisplay(el, display) {
+    if (getElDisplay(el) == display) {
         return;
     }
-    hideBiggerDisplay();
-    if (elClickedClass.includes('result')) {
-        const resultWrapper = (elClickedClass.includes('wrapper')) ? elClicked : elClicked.parentElement;
-        window.scrollTo({ top: 0, left: 0 });
-        showBiggerDisplay(resultWrapper);
-    }
-};
+    el.style.display = display;
+}
+function hideEl(el) {
+    setElDisplay(el, NONE_STR);
+}
 function decodeEscaped(text) {
     try {
         const parser = new DOMParser().parseFromString(text, 'text/html');
@@ -260,146 +353,6 @@ function getShortDescVersion(fullDesc) {
         return [shortDescVersion, hasMore];
     }
     return [fullDesc, hasMore];
-}
-function showBiggerDisplay(resultWrapper) {
-    // result metadata
-    const resultMetadata = JSON.parse(resultWrapper.getAttribute('metadata'));
-    const kind = resultMetadata.kind;
-    // title 
-    biggerDisplayTitle.textContent = resultMetadata.title;
-    // frame
-    switch (kind) {
-        case RESULT_KIND.video:
-            const videoId = resultMetadata.videoId;
-            biggerDisplayFrame = document.createElement('iframe');
-            biggerDisplayFrame.src = `https://www.youtube.com/embed/${videoId}`;
-            biggerDisplayFrame.allowFullscreen = true;
-            // fetch full desc
-            if (quotasAmt < QUOTAS_PER_VID_DESC_AMT) {
-                alert('Not enough quotas available. Come back tomorrow');
-                break;
-            }
-            let fullDesc;
-            fetch(`https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${API_KEY}`)
-                .then((data) => data.json()
-                .then((json) => __awaiter(this, void 0, void 0, function* () {
-                fullDesc = json.items[0].snippet.description;
-                // update quotas
-                quotasAmt -= QUOTAS_PER_VID_DESC_AMT;
-                quotasAmtEl.textContent = quotasAmt.toString();
-                localStorage.setItem(QUOTAS_AMT_KEY, quotasAmt.toString());
-                // no desc
-                if (fullDesc == '') {
-                    biggerDisplayDesc.textContent = 'No description';
-                    return;
-                }
-                // Replace search result desc version with video desc version
-                const shortDescValues = getShortDescVersion(fullDesc);
-                const shortDescVersion = shortDescValues[0];
-                biggerDisplayDesc.textContent = shortDescVersion;
-                const hasMore = shortDescValues[1];
-                if (hasMore) {
-                    biggerDisplayDescReadMoreBtn.onclick = () => {
-                        biggerDisplayDesc.textContent = fullDesc;
-                        hideEl(biggerDisplayDescReadMoreBtn);
-                    };
-                    setElDisplay(biggerDisplayDescReadMoreBtn, INLINE_BLOCK_STR);
-                }
-            })))
-                .catch((e) => { console.log('Exception occured: ', e); });
-            break;
-        case RESULT_KIND.playlist:
-        case RESULT_KIND.channel:
-            biggerDisplayFrame = document.createElement('img');
-            biggerDisplayFrame.src = resultMetadata.thumbnailSrc;
-            break;
-    }
-    biggerDisplayFrame.id = 'bigger-display-frame';
-    biggerDisplayWrapper.insertBefore(biggerDisplayFrame, biggerDisplayChannelBtn);
-    // channel
-    biggerDisplayChannelBtn.onclick = () => {
-        // clear search query
-        searchInput.value = '';
-        // update channel
-        channelInput.value = resultMetadata.channelName;
-        channelId = resultMetadata.channelId;
-        setElDisplay(clearChannelBtn, INLINE_BLOCK_STR);
-        // trigger search
-        searchBtn.click();
-    };
-    biggerDisplayChannelBtn.textContent = resultMetadata.channelName;
-    // desc
-    if (kind == RESULT_KIND.video) {
-        if (quotasAmt >= QUOTAS_PER_VID_DESC_AMT) {
-            biggerDisplayDesc.textContent = 'Loading...';
-        }
-        else {
-            biggerDisplayDesc.textContent = 'Failed to fetch video desc';
-        }
-    }
-    else {
-        biggerDisplayDesc.textContent = resultMetadata.shortDesc;
-    }
-    setElDisplay(biggerDisplayWrapper, FLEX_STR);
-}
-function hideBiggerDisplay() {
-    // remove frame
-    if (biggerDisplayFrame) {
-        biggerDisplayFrame.remove();
-    }
-    hideEl(biggerDisplayDescReadMoreBtn);
-    hideEl(biggerDisplayWrapper);
-}
-function hideEl(el) {
-    setElDisplay(el, NONE_STR);
-}
-function getElDisplay(el) {
-    return el.style.display;
-}
-function setElDisplay(el, display) {
-    if (getElDisplay(el) == display) {
-        return;
-    }
-    el.style.display = display;
-}
-function getDatetimeBefore(datetime) {
-    const year = datetime.getFullYear();
-    const month = datetime.getMonth();
-    const date = datetime.getDate();
-    const hours = datetime.getHours();
-    const mins = datetime.getMinutes();
-    const secs = datetime.getSeconds();
-    if (date == 1) {
-        if (month == 0) {
-            return new Date(year - 1, 12, 0, hours, mins, secs);
-        }
-        else {
-            return new Date(year, month + 1, 0, hours, mins, secs);
-        }
-    }
-    else {
-        return new Date(year, month, date - 1, hours, mins, secs);
-    }
-}
-function getDatetimeAfter(datetime) {
-    const year = datetime.getFullYear();
-    const month = datetime.getMonth();
-    const date = datetime.getDate();
-    const hours = datetime.getHours();
-    const mins = datetime.getMinutes();
-    const secs = datetime.getSeconds();
-    const lastMonthDate = new Date(year, month + 1, 0).getDate();
-    if (date == lastMonthDate) {
-        if (month == 11) {
-            return new Date(year + 1, 0, 1, hours, mins, secs);
-        }
-        else {
-            return new Date(year, month + 1, 1, hours, mins, secs);
-        }
-    }
-    else {
-        return new Date(year, month, date + 1, hours, mins, secs);
-    }
 }
 function isDatetimeFormatValid(text) {
     if (!text.includes('/')) {
@@ -584,5 +537,12 @@ function updateDropdownValue(dropdown) {
     }
     else if (dropdown.id == resultsOrderByDropdown.id) {
         resultsOrderBy = dropdown.value;
+    }
+}
+function updateQuotas(updateStoredValue = true) {
+    const quotasAmtStr = quotasAmt.toString();
+    quotasAmtEl.textContent = quotasAmtStr;
+    if (updateStoredValue) {
+        localStorage.setItem(QUOTAS_AMT_KEY, quotasAmtStr);
     }
 }

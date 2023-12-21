@@ -206,8 +206,8 @@ button:hover
 	padding: 5px;
 }
 
-/* clicked result */
-#bigger-display-wrapper
+/* big display */
+#big-display-wrapper
 {
 	display: flex;
 	flex-direction: column;
@@ -231,20 +231,20 @@ button:hover
 	background-color: white;
 	border: 1.5px solid grey;
 }
-#bigger-display-title
+#big-display-title
 {
 	align-self: center;
 	font-size: 1.25rem;
 	font-family: Arial, sans-serif;
 }
-#bigger-display-frame
+#big-display-frame
 {
 	align-self: center;
 	margin: .5rem 0;
 	width: 75%;
 	aspect-ratio: 16 / 9;
 }
-#bigger-display-channel-btn
+#big-display-channel-btn
 {
 	margin-top: 1rem;
 	width: fit-content;
@@ -253,7 +253,7 @@ button:hover
 	border: 1px solid grey;
 	border-radius: 10px;
 }
-#bigger-display-desc-label
+#big-display-desc-label
 {
 	display: block;
 	padding-top: 1rem;
@@ -261,13 +261,13 @@ button:hover
 	font-weight: bold;
 	color: #666;
 }
-#bigger-display-desc
+#big-display-desc
 {
 	display: inline;
 	font-size: .85rem;
 	white-space: pre-wrap;
 }
-#bigger-display-desc-read-more-btn
+#big-display-desc-read-more-btn
 {
 	width: fit-content;
 	margin-left: 10px;
