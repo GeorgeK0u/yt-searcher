@@ -13,7 +13,7 @@ let searchInput, searchBtn, channelInput, clearChannelBtn;
 // right side
 let quotasCostInfoLabel, quotasAmtEl;
 // filters
-let searchTypeDropdown, vidDurationDropdownWrapper, vidDurationDropdown, vidReleaseTimeDropdownWrapper, vidReleaseTimeDropdown, channelVideoCountOrderByOption, resultsDatetimeFromRangeDropdown, resultsDatetimeFromRangeCustomInput, resultsDatetimeToRangeDropdown, resultsDatetimeToRangeCustomInput, resultsLangDropdown, safeSearchDropdown;
+let searchTypeDropdown, vidDurationDropdownWrapper, vidDurationDropdown, vidQualityDropdownWrapper, vidQualityDropdown, vidReleaseTimeDropdownWrapper, vidReleaseTimeDropdown, channelVideoCountOrderByOption, resultsDatetimeFromRangeDropdown, resultsDatetimeFromRangeCustomInput, resultsDatetimeToRangeDropdown, resultsDatetimeToRangeCustomInput, resultsLangDropdown, safeSearchDropdown;
 // options
 let resultsPerCallDropdown, resultsOrderByDropdown;
 // results
@@ -23,12 +23,12 @@ let loadMoreResultsBtn;
 let bigDisplayWrapper, bigDisplayTitle, bigDisplayFrame, bigDisplayChannelBtn, bigDisplayDesc, bigDisplayDescReadMoreBtn;
 // help vars 
 let searchQuery, channelId, quotasAmt;
-let resultsPerCall, searchType, vidDuration, vidReleaseTime, resultsOrderBy, resultsDatetimeFromRangeOption, resultsDatetimeToRangeOption, resultsLang, safeSearch;
+let resultsPerCall, searchType, vidDuration, vidQuality, vidReleaseTime, resultsOrderBy, resultsDatetimeFromRangeOption, resultsDatetimeToRangeOption, resultsLang, safeSearch;
 let jsonResp, nextPageToken;
 // constants
-const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new Date().getDate().toString(), LAST_VISIT_DATE_KEY = 'lastVisitDate', QUOTAS_AMT_KEY = 'quotasAmt', QUOTAS_REFILL_AMT = 10000, QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_AMT = 1, INLINE_STR = 'inline', BLOCK_STR = 'block', INLINE_BLOCK_STR = 'inline-block', FLEX_STR = 'flex', NONE_STR = 'none', MAX_SHORT_DESC_CHARS = 450, RESULT_KIND = { video: 'youtube#video', playlist: 'youtube#playlist', channel: 'youtube#channel' };
-// backup api key
-// apiKey = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk';
+// main api key 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w'
+// backup api key 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk';
+const API_KEY = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w', TODAY_DATE_STR = new Date().getDate().toString(), LAST_VISIT_DATE_KEY = 'lastVisitDate', QUOTAS_AMT_KEY = 'quotasAmt', QUOTAS_REFILL_AMT = 10000, QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_AMT = 1, INLINE_STR = 'inline', BLOCK_STR = 'block', INLINE_BLOCK_STR = 'inline-block', FLEX_STR = 'flex', NONE_STR = 'none', MAX_SHORT_DESC_CHARS = 450, RESULT_KIND = { video: 'youtube#video', playlist: 'youtube#playlist', channel: 'youtube#channel' }, VIDEO_STR = 'video', CHANNEL_STR = 'channel';
 (function init() {
     // header
     // left side
@@ -66,6 +66,9 @@ const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new 
     vidDurationDropdownWrapper = document.querySelector('#video-duration-dropdown-wrapper');
     hideEl(vidDurationDropdownWrapper);
     vidDurationDropdown = document.querySelector('#video-duration-dropdown');
+    vidQualityDropdownWrapper = document.querySelector('#video-quality-dropdown-wrapper');
+    hideEl(vidQualityDropdownWrapper);
+    vidQualityDropdown = document.querySelector('#video-quality-dropdown');
     vidReleaseTimeDropdownWrapper = document.querySelector('#video-release-time-dropdown-wrapper');
     hideEl(vidReleaseTimeDropdownWrapper);
     vidReleaseTimeDropdown = document.querySelector('#video-release-time-dropdown');
@@ -100,7 +103,7 @@ const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new 
     bigDisplayDescReadMoreBtn = document.querySelector('#big-display-desc-read-more-btn');
     // help vars
     // update dropdown values
-    const dropdowns = [searchTypeDropdown, vidDurationDropdown, vidReleaseTimeDropdown, resultsDatetimeFromRangeDropdown, resultsDatetimeToRangeDropdown, resultsLangDropdown, safeSearchDropdown, resultsPerCallDropdown, resultsOrderByDropdown];
+    const dropdowns = Array.from(document.querySelectorAll('select'));
     for (const dropdown of dropdowns) {
         updateDropdownValue(dropdown);
         dropdown.onchange = () => {
@@ -149,8 +152,9 @@ function showResults(clear = false) {
             // results type
             const searchTypePart = (searchType != '') ? `&type=${searchType}` : '';
             // video specific filters
-            const vidDurationPart = (getElDisplay(vidDurationDropdownWrapper) != NONE_STR && vidDuration != '') ? `&videoDuration=${vidDuration}` : '';
-            const vidEventTypePart = (getElDisplay(vidReleaseTimeDropdownWrapper) != NONE_STR && vidReleaseTime != '') ? `&eventType=${vidReleaseTime}` : '';
+            const vidDurationPart = (searchType == VIDEO_STR && vidDuration != '') ? `&videoDuration=${vidDuration}` : '';
+            const vidQualityPart = (searchType == VIDEO_STR && vidQuality != '') ? `&videoDefinition=${vidQuality}` : '';
+            const vidEventTypePart = (searchType == VIDEO_STR && vidReleaseTime != '') ? `&eventType=${vidReleaseTime}` : '';
             // datetime range
             const datetimeRangeValues = getDatetimeRange();
             const datetimeFromRange = datetimeRangeValues[0];
@@ -161,12 +165,13 @@ function showResults(clear = false) {
             const channelIdPart = (channelId != '') ? `&channelId=${channelId}` : '';
             // results language
             const resultsLangPart = (resultsLang != '') ? `&relevanceLanguage=${resultsLang}` : '';
-            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerCall}&pageToken=${nextPageToken}&q=${searchQuery}${searchTypePart}${vidDurationPart}${vidEventTypePart}&order=${resultsOrderBy}${publishedAfterPart}${publishedBeforePart}${channelIdPart}${resultsLangPart}&safeSearch=${safeSearch}&key=${API_KEY}`);
+            const resp = yield fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerCall}&pageToken=${nextPageToken}&q=${searchQuery}${searchTypePart}${vidDurationPart}${vidQualityPart}${vidEventTypePart}&order=${resultsOrderBy}${publishedAfterPart}${publishedBeforePart}${channelIdPart}${resultsLangPart}&safeSearch=${safeSearch}&key=${API_KEY}`);
             jsonResp = yield resp.json();
             // results
             // User has used their quotas outside this app as well
             if (!jsonResp.hasOwnProperty('items')) {
                 alert('Not enough quotas available. Come back tomorrow');
+                console.log('User has used their quotas outside this app as well');
                 return;
             }
             // update quotas
@@ -513,9 +518,16 @@ function convertDatetimeToRFC(datetime) {
 function updateDropdownValue(dropdown) {
     if (dropdown.id == searchTypeDropdown.id) {
         searchType = dropdown.value;
+        setElDisplay(vidDurationDropdownWrapper, (searchType == VIDEO_STR) ? BLOCK_STR : NONE_STR);
+        setElDisplay(vidQualityDropdownWrapper, (searchType == VIDEO_STR) ? BLOCK_STR : NONE_STR);
+        setElDisplay(vidReleaseTimeDropdownWrapper, (searchType == VIDEO_STR) ? BLOCK_STR : NONE_STR);
+        setElDisplay(channelVideoCountOrderByOption, (searchType == CHANNEL_STR) ? INLINE_STR : NONE_STR);
     }
     else if (dropdown.id == vidDurationDropdown.id) {
         vidDuration = dropdown.value;
+    }
+    else if (dropdown.id == vidQualityDropdown.id) {
+        vidQuality = dropdown.value;
     }
     else if (dropdown.id == vidReleaseTimeDropdown.id) {
         vidReleaseTime = dropdown.value;
