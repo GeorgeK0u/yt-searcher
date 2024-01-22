@@ -418,13 +418,19 @@ function isDatetimeFormatValid(text) {
             pattern += ch;
         }
     }
-    var dateValues = ((pattern.includes(' ')) ? pattern.split(' ')[0] : pattern).split('/').join('');
-    var maxDigits = DAY_DIGIT_COUNT + MONTH_DIGIT_COUNT + YEAR_DIGIT_COUNT;
-    if (dateValues.length > maxDigits) {
+    var datePattern = ((pattern.includes(' ')) ? pattern.split(' ')[0] : pattern).split('/');
+    if (datePattern.length != 3) {
         return false;
     }
-    for (var _a = 0, dateValues_1 = dateValues; _a < dateValues_1.length; _a++) {
-        var ch = dateValues_1[_a];
+    var dayDigits = datePattern[0], monthDigits = datePattern[1], yearDigits = datePattern[2];
+    var dayDigitCount = dayDigits.length, monthDigitCount = monthDigits.length, yearDigitCount = yearDigits.length;
+    var minDayDigitCount = 1, maxDayDigitCount = 2, minMonthDigitCount = 1, maxMonthDigitCount = 2, minYearDigitCount = 4, maxYearDigitCount = 4;
+    if (dayDigitCount < minDayDigitCount || dayDigitCount > maxDayDigitCount || monthDigitCount < minMonthDigitCount || monthDigitCount > maxMonthDigitCount || yearDigitCount < minYearDigitCount || yearDigitCount > maxYearDigitCount) {
+        return false;
+    }
+    var datePatternJoined = datePattern.join('');
+    for (var _a = 0, datePatternJoined_1 = datePatternJoined; _a < datePatternJoined_1.length; _a++) {
+        var ch = datePatternJoined_1[_a];
         if (ch != '#') {
             return false;
         }
@@ -534,7 +540,6 @@ function getDatetimeRange() {
             }
     }
     rangeArr.push(convertDatetimeToRFC(toRange));
-    console.log(rangeArr);
     return rangeArr;
 }
 function formatDatetime(datetime) {
