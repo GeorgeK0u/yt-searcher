@@ -534,6 +534,7 @@ function getDatetimeRange() {
             }
     }
     rangeArr.push(convertDatetimeToRFC(toRange));
+    console.log(rangeArr);
     return rangeArr;
 }
 function formatDatetime(datetime) {
@@ -577,9 +578,21 @@ function updateDropdownValue(dropdown) {
     }
     else if (dropdown.id == resultsDatetimeFromRangeDropdown.id) {
         resultsDatetimeFromRangeOption = dropdown.value;
+        if (resultsDatetimeFromRangeOption == 'custom') {
+            setElDisplay(resultsDatetimeFromRangeCustomInput, INLINE_BLOCK_STR);
+        }
+        else if (getElDisplay(resultsDatetimeFromRangeCustomInput) != NONE_STR) {
+            setElDisplay(resultsDatetimeFromRangeCustomInput, NONE_STR);
+        }
     }
     else if (dropdown.id == resultsDatetimeToRangeDropdown.id) {
         resultsDatetimeToRangeOption = dropdown.value;
+        if (resultsDatetimeToRangeOption == 'custom') {
+            setElDisplay(resultsDatetimeToRangeCustomInput, INLINE_BLOCK_STR);
+        }
+        else if (getElDisplay(resultsDatetimeToRangeCustomInput) != NONE_STR) {
+            setElDisplay(resultsDatetimeToRangeCustomInput, NONE_STR);
+        }
     }
     else if (dropdown.id == resultsLangDropdown.id) {
         resultsLang = dropdown.value;
