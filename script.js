@@ -400,13 +400,15 @@ function getShortDescVersion(fullDesc) {
     }
     return [fullDesc, hasMore];
 }
-function isDatetimeFormatValid(text) {
-    if (!text.includes('/')) {
+function validateDate(dateStr) {
+    // date seperator check
+    if (!dateStr.includes('/')) {
         return false;
     }
+    // replace number chars to specific char
     var pattern = '';
-    for (var _i = 0, text_1 = text; _i < text_1.length; _i++) {
-        var ch = text_1[_i];
+    for (var _i = 0, dateStr_1 = dateStr; _i < dateStr_1.length; _i++) {
+        var ch = dateStr_1[_i];
         var chCode = ch.charCodeAt(0);
         if (chCode >= 48 && chCode <= 57) {
             pattern += '#';
@@ -418,19 +420,67 @@ function isDatetimeFormatValid(text) {
             pattern += ch;
         }
     }
-    var datePattern = ((pattern.includes(' ')) ? pattern.split(' ')[0] : pattern).split('/');
-    if (datePattern.length != 3) {
+    var patternParts = pattern.split('/');
+    // check if date part count is year, month and day
+    var reqDatePartCount = 3;
+    if (patternParts.length != reqDatePartCount) {
         return false;
     }
-    var dayDigits = datePattern[0], monthDigits = datePattern[1], yearDigits = datePattern[2];
-    var dayDigitCount = dayDigits.length, monthDigitCount = monthDigits.length, yearDigitCount = yearDigits.length;
+    // min and max digit counts
+    var yearDigits = patternParts[0], monthDigits = patternParts[1], dayDigits = patternParts[2];
+    var yearDigitCount = yearDigits.length, monthDigitCount = monthDigits.length, dayDigitCount = dayDigits.length;
     var minDayDigitCount = 1, maxDayDigitCount = 2, minMonthDigitCount = 1, maxMonthDigitCount = 2, minYearDigitCount = 4, maxYearDigitCount = 4;
-    if (dayDigitCount < minDayDigitCount || dayDigitCount > maxDayDigitCount || monthDigitCount < minMonthDigitCount || monthDigitCount > maxMonthDigitCount || yearDigitCount < minYearDigitCount || yearDigitCount > maxYearDigitCount) {
+    if (yearDigitCount < minYearDigitCount || yearDigitCount > maxYearDigitCount || monthDigitCount < minMonthDigitCount || monthDigitCount > maxMonthDigitCount || dayDigitCount < minDayDigitCount || dayDigitCount > maxDayDigitCount) {
         return false;
     }
-    var datePatternJoined = datePattern.join('');
-    for (var _a = 0, datePatternJoined_1 = datePatternJoined; _a < datePatternJoined_1.length; _a++) {
-        var ch = datePatternJoined_1[_a];
+    // only numeric chars in-between date seperator check
+    var patternJoined = patternParts.join('');
+    for (var _a = 0, patternJoined_1 = patternJoined; _a < patternJoined_1.length; _a++) {
+        var ch = patternJoined_1[_a];
+        if (ch != '#') {
+            return false;
+        }
+    }
+    return true;
+}
+function validateTime(timeStr) {
+    // time seperator check
+    if (!timeStr.includes(':')) {
+        return false;
+    }
+    // replace number chars to specific char
+    var pattern = '';
+    for (var _i = 0, timeStr_1 = timeStr; _i < timeStr_1.length; _i++) {
+        var ch = timeStr_1[_i];
+        var chCode = ch.charCodeAt(0);
+        if (chCode >= 48 && chCode <= 57) {
+            pattern += '#';
+        }
+        else if (ch == '#') {
+            pattern += '';
+        }
+        else {
+            pattern += ch;
+        }
+    }
+    var patternParts = pattern.split(':');
+    // check if time part count is either hours and mins or hours, mins and secs
+    var minTimePartCount = 2, maxTimePartCount = 3;
+    if (patternParts.length != minTimePartCount && patternParts.length != maxTimePartCount) {
+        return false;
+    }
+    // min and max digit counts
+    var minDigitCount = 1, maxDigitCount = 2;
+    for (var _a = 0, patternParts_1 = patternParts; _a < patternParts_1.length; _a++) {
+        var patternPart = patternParts_1[_a];
+        if (patternPart.length < minDigitCount || patternPart.length > maxDigitCount) {
+            return false;
+        }
+    }
+    // only numeric chars in-between time seperator check
+    var patternJoined = patternParts.join('');
+    for (var _b = 0, patternJoined_2 = patternJoined; _b < patternJoined_2.length; _b++) {
+        var ch = patternJoined_2[_b];
         if (ch != '#') {
             return false;
         }
@@ -461,31 +511,53 @@ function getDatetimeRange() {
             break;
         case 'custom':
             try {
+                // get custom datetime
                 var customDatetime = resultsDatetimeFromRangeCustomInput.value.trim();
-                if (!isDatetimeFormatValid(customDatetime)) {
-                    resultsDatetimeFromRangeCustomInput.value = '';
-                    break;
-                }
-                var datetimeValues = customDatetime.includes(' ') ? customDatetime.split(' ') : [customDatetime];
-                // custom date
-                var customDateValues = datetimeValues[0].split('/');
-                var customDate = customDateValues[0];
-                var customMonth = (parseInt(customDateValues[1]) - 1).toString();
-                var customYear = customDateValues[2];
-                // custom time
-                var customHours = void 0, customMins = void 0, customSecs = void 0;
-                if (datetimeValues.length == 2) {
-                    var customTimeValues = datetimeValues[1].split(':');
-                    customHours = customTimeValues[0];
-                    customMins = customTimeValues[1];
-                    customSecs = customTimeValues[2];
+                var customDatetimeParts = customDatetime.split(' ');
+                // get custom date
+                var customDate = customDatetimeParts[0];
+                // get custom time
+                var customTime = customDatetimeParts[1] || customDatetimeParts[0];
+                // validate date
+                var isDateValid = validateDate(customDate);
+                var customYear = void 0, customMonth = void 0, customDay = void 0;
+                console.log("Is after date valid: ".concat(isDateValid));
+                if (!isDateValid) {
+                    // default date
+                    customYear = '1970';
+                    customMonth = formatDatetimeValue(1);
+                    customDay = formatDatetimeValue(1);
                 }
                 else {
-                    customHours = 0;
-                    customMins = 0;
-                    customSecs = 0;
+                    // get date
+                    var customDateValues = customDate.split('/');
+                    customYear = customDateValues[0];
+                    customMonth = (parseInt(customDateValues[1]) - 1).toString();
+                    customDay = customDateValues[2];
                 }
-                fromRange = formatDatetime(new Date(customYear, customMonth, customDate, customHours, customMins, customSecs));
+                // validate time
+                var isTimeValid = validateTime(customTime);
+                var customHours = void 0, customMins = void 0, customSecs = void 0;
+                console.log("Is after time valid: ".concat(isTimeValid));
+                if (!isTimeValid) {
+                    // default time
+                    customHours = formatDatetimeValue(0);
+                    customMins = formatDatetimeValue(0);
+                    customSecs = formatDatetimeValue(0);
+                }
+                else {
+                    // get time
+                    var customTimeValues = customTime.split(':');
+                    customHours = customTimeValues[0];
+                    customMins = customTimeValues[1];
+                    customSecs = customTimeValues[2] || formatDatetimeValue(0);
+                }
+                fromRange = formatDatetime(new Date(customYear, customMonth, customDay, customHours, customMins, customSecs));
+                // update custom from range input value
+                if (customDatetime != fromRange) {
+                    resultsDatetimeFromRangeCustomInput.value = fromRange;
+                }
+                console.log("From range value after validation: ".concat(fromRange));
             }
             finally {
                 break;
@@ -509,31 +581,54 @@ function getDatetimeRange() {
             break;
         case 'custom':
             try {
+                // get custom datetime
                 var customDatetime = resultsDatetimeToRangeCustomInput.value.trim();
-                if (!isDatetimeFormatValid(customDatetime)) {
-                    resultsDatetimeToRangeCustomInput.value = '';
-                    break;
-                }
-                var datetimeValues = customDatetime.includes(' ') ? customDatetime.split(' ') : [customDatetime];
-                // custom date
-                var customDateValues = datetimeValues[0].split('/');
-                var customDate = customDateValues[0];
-                var customMonth = (parseInt(customDateValues[1]) - 1).toString();
-                var customYear = customDateValues[2];
-                // custom time
-                var customHours = void 0, customMins = void 0, customSecs = void 0;
-                if (datetimeValues.length == 2) {
-                    var customTimeValues = datetimeValues[1].split(':');
-                    customHours = customTimeValues[0];
-                    customMins = customTimeValues[1];
-                    customSecs = customTimeValues[2];
+                var customDatetimeParts = customDatetime.split(' ');
+                // get custom date
+                var customDate = customDatetimeParts[0];
+                // get custom time
+                var customTime = customDatetimeParts[1] || customDatetimeParts[0];
+                // validate date
+                var isDateValid = validateDate(customDate);
+                var customYear = void 0, customMonth = void 0, customDay = void 0;
+                console.log("Is before date valid: ".concat(isDateValid));
+                if (!isDateValid) {
+                    // default date
+                    customYear = thisYear.toString();
+                    customMonth = thisMonth.toString();
+                    customDay = thisDate.toString();
                 }
                 else {
-                    customHours = 23;
-                    customMins = 59;
-                    customSecs = 59;
+                    // get date
+                    var customDateValues = customDate.split('/');
+                    customYear = customDateValues[0];
+                    customMonth = (parseInt(customDateValues[1]) - 1).toString();
+                    customDay = customDateValues[2];
                 }
-                toRange = formatDatetime(new Date(customYear, customMonth, customDate, customHours, customMins, customSecs));
+                // validate time
+                var isTimeValid = validateTime(customTime);
+                var customHours = void 0, customMins = void 0, customSecs = void 0;
+                console.log("Is before time valid: ".concat(isTimeValid));
+                if (!isTimeValid) {
+                    // default time
+                    customHours = '23';
+                    customMins = '59';
+                    customSecs = '59';
+                }
+                else {
+                    // get time
+                    var customTimeValues = customTime.split(':');
+                    customHours = customTimeValues[0];
+                    customMins = customTimeValues[1];
+                    // secs can be omitted
+                    customSecs = customTimeValues[2] || formatDatetimeValue(0);
+                }
+                toRange = formatDatetime(new Date(customYear, customMonth, customDay, customHours, customMins, customSecs));
+                // update custom to range input value
+                if (customDatetime != toRange) {
+                    resultsDatetimeToRangeCustomInput.value = toRange;
+                }
+                console.log("To range value after validation: ".concat(toRange));
             }
             finally {
                 break;
@@ -542,10 +637,10 @@ function getDatetimeRange() {
     rangeArr.push(convertDatetimeToRFC(toRange));
     return rangeArr;
 }
+function formatDatetimeValue(datetimeValue) {
+    return datetimeValue.toString().padStart(2, '0');
+}
 function formatDatetime(datetime) {
-    function formatDatetimeValue(datetimeValue) {
-        return datetimeValue.toString().padStart(2, '0');
-    }
     var year = datetime.getFullYear();
     var month = formatDatetimeValue(datetime.getMonth() + 1);
     var date = formatDatetimeValue(datetime.getDate());
