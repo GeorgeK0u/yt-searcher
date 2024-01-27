@@ -1,6 +1,8 @@
 // constants
 // get/update stored quotas
-const TODAY_DATE_STR = new Date().getDate().toString(), LAST_VISIT_DATE_KEY = 'lastVisitDate', QUOTAS_AMT_KEY = 'quotasAmt', QUOTAS_REFILL_AMT_STR = '10000', QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_AMT = 1;
+// main api key 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w'
+// backup api key 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk';
+const API_KEY = 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk', TODAY_DATE_STR = new Date().getDate().toString(), QUOTAS_REFILL_AMT = 10000, QUOTAS_PER_CALL_AMT = 100, QUOTAS_PER_VID_DESC_AMT = 1;
 // CSS display types
 const INLINE_STR = 'inline', INLINE_BLOCK_STR = 'inline-block', BLOCK_STR = 'block', FLEX_STR = 'flex', NONE_STR = 'none'; 
 // datetime validation
@@ -13,23 +15,22 @@ const MAX_SHORT_DESC_CHAR_COUNT = 450;
 // Stored quotas handling
 function checkResetStoredQuotasAmt()
 {
-	let lastVisitDateStr = localStorage.getItem(LAST_VISIT_DATE_KEY);
+	const quotasObj = JSON.parse(localStorage.getItem(API_KEY)) || null;
 	// reset
-	if (!lastVisitDateStr || lastVisitDateStr != TODAY_DATE_STR)
+	if (!quotasObj || quotasObj.lastAccessDate != TODAY_DATE_STR)
 	{
-		lastVisitDateStr = TODAY_DATE_STR;
-		localStorage.setItem(LAST_VISIT_DATE_KEY, TODAY_DATE_STR);
-		localStorage.setItem(QUOTAS_AMT_KEY, QUOTAS_REFILL_AMT_STR);
+		setStoredQuotasAmt(QUOTAS_REFILL_AMT);
 	}
 }
 function getStoredQuotasAmt()
 {
-	const quotasAmt = parseInt(localStorage.getItem(QUOTAS_AMT_KEY));
-	return quotasAmt;
+	const quotasObj = JSON.parse(localStorage.getItem(API_KEY));
+	return quotasObj.amount;
 }
-function setStoredQuotasAmt(quotasAmtStr)
+function setStoredQuotasAmt(quotasAmt)
 {
-	localStorage.setItem(QUOTAS_AMT_KEY, quotasAmtStr);
+	const quotasObjStr = JSON.stringify({ amount: quotasAmt, lastAccessDate: TODAY_DATE_STR });
+	localStorage.setItem(API_KEY, quotasObjStr);
 }
 
 // Modify element display
@@ -348,7 +349,7 @@ function getShortDescVersion(fullDesc)
 
 export
 	{ 
-		QUOTAS_PER_CALL_AMT, QUOTAS_PER_VID_DESC_AMT, checkResetStoredQuotasAmt, getStoredQuotasAmt, setStoredQuotasAmt,
+		API_KEY, QUOTAS_PER_CALL_AMT, QUOTAS_PER_VID_DESC_AMT, checkResetStoredQuotasAmt, getStoredQuotasAmt, setStoredQuotasAmt,
 		INLINE_STR, INLINE_BLOCK_STR, BLOCK_STR, FLEX_STR, NONE_STR, setElDisplay, hideEl, 
 		DATETIME_RANGE_OPTIONS, getDatetimeRange,
 		decodeEscaped, 

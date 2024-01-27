@@ -1,6 +1,6 @@
 import
 	{ 
-		QUOTAS_PER_CALL_AMT, QUOTAS_PER_VID_DESC_AMT, checkResetStoredQuotasAmt, getStoredQuotasAmt, setStoredQuotasAmt,
+		API_KEY, QUOTAS_PER_CALL_AMT, QUOTAS_PER_VID_DESC_AMT, checkResetStoredQuotasAmt, getStoredQuotasAmt, setStoredQuotasAmt,
 		INLINE_STR, INLINE_BLOCK_STR, BLOCK_STR, FLEX_STR, NONE_STR, setElDisplay, hideEl, 
 		DATETIME_RANGE_OPTIONS, getDatetimeRange,
 		decodeEscaped, 
@@ -28,9 +28,6 @@ let nextPageToken, resultPages, curPageIndex;
 // dropdown selections
 let resultsPerCall, searchType, vidDuration, vidQuality, vidReleaseTime, resultsOrderBy, resultsDatetimeFromRangeOption, resultsDatetimeToRangeOption, resultsLang, safeSearch;
 // constants
-// main api key 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w'
-// backup api key 'AIzaSyCHhXjOCJqs2FX58P_qhO9XGBZcWBMvMlk';
-const API_KEY = 'AIzaSyDrn07slgPiKCk-HzkTQWTH4yl2PEOs51w';
 const RESULT_KIND = { video: 'youtube#video', playlist: 'youtube#playlist', channel: 'youtube#channel' }, QUOTAS_STR = 'Quotas', METADATA_STR = 'metadata';
 
 (function init()
