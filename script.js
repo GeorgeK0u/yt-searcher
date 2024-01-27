@@ -1,7 +1,7 @@
 import
 	{ 
 		QUOTAS_PER_CALL_AMT, QUOTAS_PER_VID_DESC_AMT, checkResetStoredQuotasAmt, getStoredQuotasAmt, setStoredQuotasAmt,
-		INLINE_STR, INLINE_BLOCK_STR, BLOCK_STR, FLEX_STR, NONE_STR, getElDisplay, setElDisplay, hideEl, 
+		INLINE_STR, INLINE_BLOCK_STR, BLOCK_STR, FLEX_STR, NONE_STR, setElDisplay, hideEl, 
 		DATETIME_RANGE_OPTIONS, getDatetimeRange,
 		decodeEscaped, 
 		VIDEO_STR, CHANNEL_STR,
@@ -198,8 +198,8 @@ async function showResults(clear=false)
 		{
 			clearResults();
 		}
-		const searchResults = jsonResp.items;
 		// show/append results
+		const searchResults = jsonResp.items;
 		for (let i = 0; i < searchResults.length; i++)
 		{
 			const result = searchResults[i]; 
@@ -222,8 +222,6 @@ async function showResults(clear=false)
 			resultThumbnail.className = 'result-thumbnail';
 			resultThumbnail.src = resultData.thumbnails.high.url;
 			resultWrapper.appendChild(resultThumbnail);
-			// render
-			resultsWrapper.appendChild(resultWrapper);
 			// metadata
 			resultWrapper.setAttribute(METADATA_STR, JSON.stringify(
 				{ 
@@ -236,6 +234,8 @@ async function showResults(clear=false)
 					desc: resultData.description
 				}
 			));
+			// render
+			resultsWrapper.appendChild(resultWrapper);
 		}
 		// no results
 		if (resultsWrapper.childElementCount == 0)

@@ -349,7 +349,7 @@ function getShortDescVersion(fullDesc)
 export
 	{ 
 		QUOTAS_PER_CALL_AMT, QUOTAS_PER_VID_DESC_AMT, checkResetStoredQuotasAmt, getStoredQuotasAmt, setStoredQuotasAmt,
-		INLINE_STR, INLINE_BLOCK_STR, BLOCK_STR, FLEX_STR, NONE_STR, getElDisplay, setElDisplay, hideEl, 
+		INLINE_STR, INLINE_BLOCK_STR, BLOCK_STR, FLEX_STR, NONE_STR, setElDisplay, hideEl, 
 		DATETIME_RANGE_OPTIONS, getDatetimeRange,
 		decodeEscaped, 
 		VIDEO_STR, CHANNEL_STR,
