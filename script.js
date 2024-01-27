@@ -197,11 +197,19 @@ async function showResults(caller)
 		{
 			const resp = await fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerCall}&pageToken=${nextPageToken}&q=${searchQuery}${searchTypePart}${vidDurationPart}${vidQualityPart}${vidEventTypePart}&order=${resultsOrderBy}${publishedAfterPart}${publishedBeforePart}${channelIdPart}${resultsLangPart}&safeSearch=${safeSearch}&key=${API_KEY}`);
 			jsonResp = await resp.json();
-			// user has used their quotas outside this app
+			// incorrect API key or stored quotas amt
 			if (!jsonResp.items)
 			{
-				alert('Not enough quotas available. Come back tomorrow');
-				console.log('Not enough quotas available. User has used their quotas outside this app');
+				switch (jsonResp.error.code)
+				{
+					case 400:
+						alert('Invalid API key');
+						break;
+
+					case 403:
+						alert('Not enough quotas. They have been used outside this app');
+						break;
+				}
 				return;
 			}
 			// update quotas
