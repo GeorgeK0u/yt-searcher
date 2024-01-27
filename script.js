@@ -18,8 +18,7 @@ let searchTypeDropdown, vidDurationDropdownWrapper, vidDurationDropdown, vidQual
 // options
 let resultsPerCallDropdown, resultsOrderByDropdown;
 // results
-let resultsWrapper;
-let loadMoreResultsBtn;
+let resultsWrapper, noResultsLabel, loadMoreResultsBtn;
 // big display
 let bigDisplayWrapper, bigDisplayTitle, bigDisplayFrame, bigDisplayChannelBtn, bigDisplayDesc, bigDisplayDescReadMoreBtn;
 // help vars
@@ -97,6 +96,8 @@ const RESULT_KIND = { video: 'youtube#video', playlist: 'youtube#playlist', chan
 	resultsOrderByDropdown = document.querySelector('#results-order-by-dropdown');
 	// results
 	resultsWrapper = document.querySelector('#results-wrapper');
+	noResultsLabel = document.querySelector('#no-results-label');
+	hideEl(noResultsLabel);
 	loadMoreResultsBtn = document.querySelector('#load-more-results-btn');
 	hideEl(loadMoreResultsBtn);
 	loadMoreResultsBtn.onclick = async () =>
@@ -198,12 +199,6 @@ async function showResults(clear=false)
 			clearResults();
 		}
 		const searchResults = jsonResp.items;
-		// no results
-		if (searchResults.length == 0)
-		{
-			alert('No results found');
-			return;
-		}
 		// show/append results
 		for (let i = 0; i < searchResults.length; i++)
 		{
@@ -242,6 +237,13 @@ async function showResults(clear=false)
 				}
 			));
 		}
+		// no results
+		if (resultsWrapper.childElementCount == 0)
+		{
+			setElDisplay(noResultsLabel, BLOCK_STR);
+			return;
+		}
+		hideEl(noResultsLabel);
 		// update load more btn visibility
 		if (jsonResp.hasOwnProperty('nextPageToken'))
 		{

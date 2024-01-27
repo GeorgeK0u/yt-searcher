@@ -167,6 +167,13 @@ button:hover
 	display: flex;
 	flex-wrap: wrap;
 }
+#no-results-label
+{
+	padding-top: 2rem;
+	text-align: center;
+	font-size: 1.5rem;
+	text-transform: capitalize;
+}
 .result-wrapper
 {
 	margin-top: 2rem;
