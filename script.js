@@ -18,11 +18,13 @@ let searchTypeDropdown, vidDurationDropdownWrapper, vidDurationDropdown, vidQual
 // options
 let resultsPerCallDropdown, resultsOrderByDropdown;
 // results
-let resultsWrapper, noResultsLabel, loadMoreResultsBtn;
+let resultsWrapper, noResultsLabel, pageBtnsWrapper, prevPageBtn, nextPageBtn;
 // big display
 let bigDisplayWrapper, bigDisplayTitle, bigDisplayFrame, bigDisplayChannelBtn, bigDisplayDesc, bigDisplayDescReadMoreBtn;
 // help vars
-let searchQuery, channelId, quotasAmt, jsonResp, nextPageToken, searchTypeTmp;
+let searchQuery, channelId, quotasAmt, jsonResp, searchTypeTmp;
+// paging
+let nextPageToken, resultPages, curPageIndex;
 // dropdown selections
 let resultsPerCall, searchType, vidDuration, vidQuality, vidReleaseTime, resultsOrderBy, resultsDatetimeFromRangeOption, resultsDatetimeToRangeOption, resultsLang, safeSearch;
 // constants
@@ -45,8 +47,14 @@ const RESULT_KIND = { video: 'youtube#video', playlist: 'youtube#playlist', chan
 			searchBtn.blur();
 			// update search query
 			searchQuery = searchInput.value;
-			const clearPrevious = true;
-			showResults(clearPrevious);
+			// reset paging
+			nextPageToken = '';
+			resultPages = [];
+			curPageIndex = 0;
+			hideEl(pageBtnsWrapper);
+			// show results
+			const caller = searchBtn;
+			showResults(caller);
 		}
 	channelInput = document.querySelector('#channel-input');
 	clearChannelBtn = document.querySelector('#clear-channel-btn');
@@ -56,6 +64,8 @@ const RESULT_KIND = { video: 'youtube#video', playlist: 'youtube#playlist', chan
 			channelId = '';
 			hideEl(clearChannelBtn);
 			clearResults();
+			// hide page btns
+			hideEl(pageBtnsWrapper);
 			// change search type back to selection
 			if (searchTypeTmp)
 			{
@@ -98,14 +108,20 @@ const RESULT_KIND = { video: 'youtube#video', playlist: 'youtube#playlist', chan
 	resultsWrapper = document.querySelector('#results-wrapper');
 	noResultsLabel = document.querySelector('#no-results-label');
 	hideEl(noResultsLabel);
-	loadMoreResultsBtn = document.querySelector('#load-more-results-btn');
-	hideEl(loadMoreResultsBtn);
-	loadMoreResultsBtn.onclick = async () =>
+	pageBtnsWrapper = document.querySelector('#page-btns-wrapper');
+	hideEl(pageBtnsWrapper);
+	prevPageBtn = document.querySelector('#prev-page-btn');
+	prevPageBtn.onclick = (e) =>
 		{
-			// update next page token
-			nextPageToken = jsonResp.nextPageToken;
-			showResults();
-		}
+			const caller = prevPageBtn;
+			showResults(caller);	
+		};
+	nextPageBtn = document.querySelector('#next-page-btn');
+	nextPageBtn.onclick = (e) =>
+		{
+			const caller = nextPageBtn;
+			showResults(caller);	
+		};
 	// big display	
 	bigDisplayWrapper = document.querySelector('#big-display-wrapper');
 	hideEl(bigDisplayWrapper);
@@ -115,7 +131,6 @@ const RESULT_KIND = { video: 'youtube#video', playlist: 'youtube#playlist', chan
 	bigDisplayDescReadMoreBtn = document.querySelector('#big-display-desc-read-more-btn');
 	// help vars
 	channelId = '';
-	nextPageToken = '';
 	// update dropdown values
 	const dropdowns = [searchTypeDropdown, vidDurationDropdown, vidQualityDropdown, vidReleaseTimeDropdown, resultsDatetimeFromRangeDropdown, resultsDatetimeToRangeDropdown, resultsLangDropdown, safeSearchDropdown, resultsPerCallDropdown, resultsOrderByDropdown];
 	for (const dropdown of dropdowns)
@@ -155,121 +170,135 @@ const RESULT_KIND = { video: 'youtube#video', playlist: 'youtube#playlist', chan
 		}
 })();
 
-async function showResults(clear=false)
+async function showResults(caller)
 {
-	if (quotasAmt < QUOTAS_PER_CALL_AMT)
+	let searchResults;
+	if (caller == searchBtn)
 	{
-		alert('Not enough quotas available. Come back tomorrow');
-		return;
-	}
-	// results type
-	const searchTypePart = (searchType != '') ? `&type=${searchType}` : '';
-	// video specific filters
-	const vidDurationPart = (searchType == VIDEO_STR && vidDuration != '') ? `&videoDuration=${vidDuration}` : '';
-	const vidQualityPart = (searchType == VIDEO_STR && vidQuality != '') ? `&videoDefinition=${vidQuality}` : '';
-	const vidEventTypePart = (searchType == VIDEO_STR && vidReleaseTime != '') ? `&eventType=${vidReleaseTime}` : '';
-	// datetime range
-	const datetimeRangeValues = getDatetimeRange(resultsDatetimeFromRangeOption, resultsDatetimeFromRangeCustomInput, resultsDatetimeToRangeOption, resultsDatetimeToRangeCustomInput);
-	const datetimeFromRange = datetimeRangeValues[0];
-	const publishedAfterPart = (datetimeFromRange != '') ? `&publishedAfter=${datetimeFromRange}` : '';
-	const datetimeToRange = datetimeRangeValues[1];
-	const publishedBeforePart = (datetimeToRange != '') ? `&publishedBefore=${datetimeToRange}` : '';
-	// channel id
-	const channelIdPart = (channelId != '') ? `&channelId=${channelId}` : '';
-	// results language
-	const resultsLangPart = (resultsLang != '') ? `&relevanceLanguage=${resultsLang}` : '';
-	try
-	{
-		const resp = await fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerCall}&pageToken=${nextPageToken}&q=${searchQuery}${searchTypePart}${vidDurationPart}${vidQualityPart}${vidEventTypePart}&order=${resultsOrderBy}${publishedAfterPart}${publishedBeforePart}${channelIdPart}${resultsLangPart}&safeSearch=${safeSearch}&key=${API_KEY}`);
-		jsonResp = await resp.json();
-		// results
-		// User has used their quotas outside this app as well
-		if (!jsonResp.hasOwnProperty('items'))
+		if (quotasAmt < QUOTAS_PER_CALL_AMT)
 		{
 			alert('Not enough quotas available. Come back tomorrow');
-			console.log('User has used their quotas outside this app as well');
 			return;
 		}
-		// update quotas
-		quotasAmt -= QUOTAS_PER_CALL_AMT;
-		updateQuotas();
-		// clear previous results
-		if (clear)
+		// results type
+		const searchTypePart = (searchType != '') ? `&type=${searchType}` : '';
+		// video specific filters
+		const vidDurationPart = (searchType == VIDEO_STR && vidDuration != '') ? `&videoDuration=${vidDuration}` : '';
+		const vidQualityPart = (searchType == VIDEO_STR && vidQuality != '') ? `&videoDefinition=${vidQuality}` : '';
+		const vidEventTypePart = (searchType == VIDEO_STR && vidReleaseTime != '') ? `&eventType=${vidReleaseTime}` : '';
+		// datetime range
+		const datetimeRangeValues = getDatetimeRange(resultsDatetimeFromRangeOption, resultsDatetimeFromRangeCustomInput, resultsDatetimeToRangeOption, resultsDatetimeToRangeCustomInput);
+		const datetimeFromRange = datetimeRangeValues[0];
+		const publishedAfterPart = (datetimeFromRange != '') ? `&publishedAfter=${datetimeFromRange}` : '';
+		const datetimeToRange = datetimeRangeValues[1];
+		const publishedBeforePart = (datetimeToRange != '') ? `&publishedBefore=${datetimeToRange}` : '';
+		// channel id
+		const channelIdPart = (channelId != '') ? `&channelId=${channelId}` : '';
+		// results language
+		const resultsLangPart = (resultsLang != '') ? `&relevanceLanguage=${resultsLang}` : '';
+		try
+		{
+			const resp = await fetch(`https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${resultsPerCall}&pageToken=${nextPageToken}&q=${searchQuery}${searchTypePart}${vidDurationPart}${vidQualityPart}${vidEventTypePart}&order=${resultsOrderBy}${publishedAfterPart}${publishedBeforePart}${channelIdPart}${resultsLangPart}&safeSearch=${safeSearch}&key=${API_KEY}`);
+			jsonResp = await resp.json();
+			// user has used their quotas outside this app
+			if (!jsonResp.items)
+			{
+				alert('Not enough quotas available. Come back tomorrow');
+				console.log('Not enough quotas available. User has used their quotas outside this app');
+				return;
+			}
+			// update quotas
+			quotasAmt -= QUOTAS_PER_CALL_AMT;
+			updateQuotas();
+			clearResults();
+			searchResults = jsonResp.items;
+			// show page btns 
+			if (searchResults.length > 0)
+			{
+				setElDisplay(pageBtnsWrapper, BLOCK_STR);
+			}
+			// store page results
+			resultPages.push(searchResults);
+			// update next page token
+			nextPageToken = jsonResp.nextPageToken;
+		}
+		catch (err)
+		{
+			console.log('Exception occured: ', err);
+			return;
+		}
+	}
+	else if (caller == prevPageBtn)
+	{
+		curPageIndex -= 1;
+		clearResults();
+		searchResults = resultPages[curPageIndex];
+	}
+	else if (caller == nextPageBtn)
+	{
+		curPageIndex += 1;
+		if (curPageIndex <= resultPages.length - 1)
 		{
 			clearResults();
-		}
-		// show/append results
-		const searchResults = jsonResp.items;
-		for (let i = 0; i < searchResults.length; i++)
-		{
-			const result = searchResults[i]; 
-			const resultData = result.snippet;
-			// wrapper
-			const resultWrapper = document.createElement('div');
-			resultWrapper.className = 'result-wrapper';
-			// title
-			const resultTitle = document.createElement('div'); 
-			resultTitle.className = 'result-title';
-			resultTitle.textContent = decodeEscaped(resultData.title);
-			resultWrapper.appendChild(resultTitle);
-			// channel
-			const resultChannelName = document.createElement('div');
-			resultChannelName.className = 'result-channel-name';
-			resultChannelName.textContent = resultData.channelTitle;
-			resultWrapper.appendChild(resultChannelName);
-			// thumbnail
-			const resultThumbnail = document.createElement('img');
-			resultThumbnail.className = 'result-thumbnail';
-			resultThumbnail.src = resultData.thumbnails.high.url;
-			resultWrapper.appendChild(resultThumbnail);
-			// metadata
-			resultWrapper.setAttribute(METADATA_STR, JSON.stringify(
-				{ 
-					kind: result.id.kind,
-					channelId: resultData.channelId,
-					videoId: (result.id.hasOwnProperty('videoId')) ? result.id.videoId : '',
-					title: resultTitle.textContent,
-					channelName: resultChannelName.textContent,
-					thumbnailSrc: resultThumbnail.src,
-					desc: resultData.description
-				}
-			));
-			// render
-			resultsWrapper.appendChild(resultWrapper);
-		}
-		// no results
-		if (resultsWrapper.childElementCount == 0)
-		{
-			setElDisplay(noResultsLabel, BLOCK_STR);
-			return;
-		}
-		hideEl(noResultsLabel);
-		// update load more btn visibility
-		if (jsonResp.hasOwnProperty('nextPageToken'))
-		{
-			setElDisplay(loadMoreResultsBtn, INLINE_BLOCK_STR);
+			searchResults = resultPages[curPageIndex];
 		}
 		else
 		{
-			// hide when no more results available
-			hideEl(loadMoreResultsBtn);
+			caller = searchBtn;
+			showResults(caller);
+			return;
 		}
 	}
-	catch (err)
+	// modify no results display
+	setElDisplay(noResultsLabel, (searchResults.length > 0) ? NONE_STR : BLOCK_STR);
+	// show results
+	for (let i = 0; i < searchResults.length; i++)
 	{
-		console.log('Exception occured: ', err);
+		const result = searchResults[i]; 
+		const resultData = result.snippet;
+		// wrapper
+		const resultWrapper = document.createElement('div');
+		resultWrapper.className = 'result-wrapper';
+		// title
+		const resultTitle = document.createElement('div'); 
+		resultTitle.className = 'result-title';
+		resultTitle.textContent = decodeEscaped(resultData.title);
+		resultWrapper.appendChild(resultTitle);
+		// channel
+		const resultChannelName = document.createElement('div');
+		resultChannelName.className = 'result-channel-name';
+		resultChannelName.textContent = resultData.channelTitle;
+		resultWrapper.appendChild(resultChannelName);
+		// thumbnail
+		const resultThumbnail = document.createElement('img');
+		resultThumbnail.className = 'result-thumbnail';
+		resultThumbnail.src = resultData.thumbnails.high.url;
+		resultWrapper.appendChild(resultThumbnail);
+		// metadata
+		resultWrapper.setAttribute(METADATA_STR, JSON.stringify(
+			{ 
+				kind: result.id.kind,
+				channelId: resultData.channelId,
+				videoId: (result.id.hasOwnProperty('videoId')) ? result.id.videoId : '',
+				title: resultTitle.textContent,
+				channelName: resultChannelName.textContent,
+				thumbnailSrc: resultThumbnail.src,
+				desc: resultData.description
+			}
+		));
+		// render
+		resultsWrapper.appendChild(resultWrapper);
 	}
+	// enable/disable page btns
+	prevPageBtn.disabled = curPageIndex == 0;
+	nextPageBtn.disabled = curPageIndex == resultPages.length-1 && !nextPageToken;
 }
 function clearResults()
 {
-	// clear results
 	for (let i = resultsWrapper.childElementCount-1; i >= 0; i--)
 	{
 		resultsWrapper.children[i].remove();
 	}
-	hideEl(loadMoreResultsBtn);
-	// reset next page token
-	nextPageToken = '';
 }
 
 function showBigDisplay(resultWrapper)
