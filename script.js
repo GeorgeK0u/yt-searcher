@@ -23,7 +23,7 @@ let loadMoreResultsBtn;
 // big display
 let bigDisplayWrapper, bigDisplayTitle, bigDisplayFrame, bigDisplayChannelBtn, bigDisplayDesc, bigDisplayDescReadMoreBtn;
 // help vars
-let searchQuery, channelId, quotasAmt, jsonResp, nextPageToken;
+let searchQuery, channelId, quotasAmt, jsonResp, nextPageToken, searchTypeTmp;
 // dropdown selections
 let resultsPerCall, searchType, vidDuration, vidQuality, vidReleaseTime, resultsOrderBy, resultsDatetimeFromRangeOption, resultsDatetimeToRangeOption, resultsLang, safeSearch;
 // constants
@@ -53,14 +53,18 @@ const RESULT_KIND = { video: 'youtube#video', playlist: 'youtube#playlist', chan
 	clearChannelBtn = document.querySelector('#clear-channel-btn');
 	clearChannelBtn.onclick = () =>
 		{
-			if (channelInput.value == '')
-			{
-				return;
-			}
 			channelInput.value = '';
 			channelId = '';
-			clearResults();
 			hideEl(clearChannelBtn);
+			clearResults();
+			// change search type back to selection
+			if (searchTypeTmp)
+			{
+				searchTypeDropdown.value = searchTypeTmp;
+				updateDropdownValue(searchTypeDropdown);
+				// reset
+				searchTypeTmp = null;
+			}
 		}
 	hideEl(clearChannelBtn);
 	// right side
@@ -335,6 +339,15 @@ function showBigDisplay(resultWrapper)
 			channelInput.value = resultMetadata.channelName;
 			channelId = resultMetadata.channelId;
 			setElDisplay(clearChannelBtn, INLINE_BLOCK_STR);
+			// temp change search type to channel default listing
+			if (searchTypeDropdown.value == CHANNEL_STR)
+			{
+				// store search type selection
+				searchTypeTmp = searchType;
+				// change to type all
+				searchTypeDropdown.value = ''; 
+				updateDropdownValue(searchTypeDropdown);
+			}
 			// trigger search
 			searchBtn.click();
 		}
